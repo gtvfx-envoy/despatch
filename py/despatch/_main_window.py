@@ -1,221 +1,451 @@
-"""Main application window for envoy_despatch."""
+"""Frameless search-first Despatch launcher window."""
+
+from __future__ import annotations
 
 from Qt import QtCore, QtGui, QtWidgets
 
-from . import _app_store
-from . import _constants
-from . import _icons
-from . import _session
-from . import _stack
+from . import _constants, _icons, _models, _search
 
+_APPLICATION_ROLE = QtCore.Qt.UserRole
+_SECTION_ROLE = QtCore.Qt.UserRole + 1
+
+
+def _globalPoint(event) -> QtCore.QPoint:
+    """Return a mouse event's global point across supported Qt versions."""
+    if hasattr(event, "globalPosition"):
+        return event.globalPosition().toPoint()
+    return event.globalPos()
+
+
+class TitleBar(QtWidgets.QWidget):
+    """Custom title bar for the frameless launcher."""
+
+    closeRequested = QtCore.Signal()
+    minimizeRequested = QtCore.Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._drag_offset: QtCore.QPoint | None = None
+        self.setFixedHeight(44)
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(14, 6, 8, 4)
+        layout.setSpacing(6)
+
+        icon_label = QtWidgets.QLabel()
+        icon_label.setPixmap(_icons.loadProductIcon().pixmap(22, 22))
+        layout.addWidget(icon_label)
+
+        title_label = QtWidgets.QLabel(_constants.PRODUCT_NAME)
+        title_label.setObjectName("productTitle")
+        layout.addWidget(title_label)
+        layout.addStretch(1)
+
+        minimize_button = QtWidgets.QToolButton()
+        minimize_button.setObjectName("windowButton")
+        minimize_button.setText("—")
+        minimize_button.setToolTip("Minimize")
+        minimize_button.clicked.connect(self.minimizeRequested)
+        layout.addWidget(minimize_button)
+
+        close_button = QtWidgets.QToolButton()
+        close_button.setObjectName("windowButton")
+        close_button.setText("×")
+        close_button.setToolTip("Hide to tray")
+        close_button.clicked.connect(self.closeRequested)
+        layout.addWidget(close_button)
+
+    def mousePressEvent(self, event) -> None:
+        """Begin a window drag from the custom title bar."""
+        if event.button() == QtCore.Qt.LeftButton:
+            window_handle = self.window().windowHandle()
+            if (
+                window_handle is not None
+                and hasattr(window_handle, "startSystemMove")
+                and window_handle.startSystemMove()
+            ):
+                event.accept()
+                return
+            self._drag_offset = _globalPoint(event) - self.window().frameGeometry().topLeft()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        """Move the window during a fallback title-bar drag."""
+        if self._drag_offset is not None and event.buttons() & QtCore.Qt.LeftButton:
+            self.window().move(_globalPoint(event) - self._drag_offset)
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        """Finish a fallback title-bar drag."""
+        self._drag_offset = None
+        super().mouseReleaseEvent(event)
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """Main application window for envoy_despatch.
+    """Primary application browser and launcher."""
 
-    Provides the primary interface for browsing and launching applications,
-    switching stacks, and accessing advanced features.
+    launchRequested = QtCore.Signal(str, bool)
+    favoriteToggleRequested = QtCore.Signal(str)
+    copyRequested = QtCore.Signal(str)
+    configurationRequested = QtCore.Signal(object)
+    refreshRequested = QtCore.Signal()
+    settingsRequested = QtCore.Signal()
 
-    Args:
-        session: Session instance managing state.
-
-    """
-
-    def __init__(self, session: _session.Session):
+    def __init__(self):
         super().__init__()
-        self._session = session
+        self._snapshot = _models.CatalogSnapshot(None, (), (), ())
+        self._application_map: dict[str, _models.ApplicationEntry] = {}
+        self._favorites: frozenset[str] = frozenset()
+        self._recent_applications: tuple[str, ...] = ()
+        self._allow_close = False
+        self._populating_configurations = False
+
+        window_flags = QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint
+        self.setWindowFlags(window_flags)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
+        self.setWindowTitle(_constants.PRODUCT_NAME)
+        self.setWindowIcon(_icons.loadProductIcon())
+        self.setMinimumSize(
+            _constants.MINIMUM_WINDOW_WIDTH,
+            _constants.MINIMUM_WINDOW_HEIGHT,
+        )
+        self.resize(_constants.DEFAULT_WINDOW_WIDTH, _constants.DEFAULT_WINDOW_HEIGHT)
         self._setupUi()
         self._connectSignals()
-        self._refreshUi()
 
     def _setupUi(self) -> None:
-        """Initialize the user interface components."""
-        self.setWindowTitle(
-            f"{_constants.PRODUCT_NAME} [{self._session.stack_type.display_name}]"
-        )
-        self.setMinimumSize(_constants.DEFAULT_WINDOW_WIDTH, _constants.DEFAULT_WINDOW_HEIGHT)
-        self.resize(800, 600)
+        """Build the launcher interface."""
+        outer_widget = QtWidgets.QWidget()
+        outer_layout = QtWidgets.QVBoxLayout(outer_widget)
+        outer_layout.setContentsMargins(14, 14, 14, 14)
 
-        # Central widget with vertical layout
-        central_widget = QtWidgets.QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QtWidgets.QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(8, 8, 8, 8)
-        main_layout.setSpacing(4)
+        shell = QtWidgets.QFrame()
+        shell.setObjectName("windowShell")
+        shadow = QtWidgets.QGraphicsDropShadowEffect(shell)
+        shadow.setBlurRadius(32)
+        shadow.setOffset(0, 8)
+        shadow.setColor(QtGui.QColor(0, 0, 0, 90))
+        shell.setGraphicsEffect(shadow)
+        outer_layout.addWidget(shell)
+        self.setCentralWidget(outer_widget)
 
-        # Top bar with stack chooser and search
-        top_bar = QtWidgets.QWidget()
-        top_layout = QtWidgets.QHBoxLayout(top_bar)
-        top_layout.setContentsMargins(0, 0, 0, 4)
+        shell_layout = QtWidgets.QVBoxLayout(shell)
+        shell_layout.setContentsMargins(0, 0, 0, 10)
+        shell_layout.setSpacing(8)
 
-        # stack combobox
-        self._stack_combo = QtWidgets.QComboBox()
-        self._stack_combo.setMinimumWidth(200)
-        top_layout.addWidget(self._stack_combo, 0)
+        self._title_bar = TitleBar()
+        shell_layout.addWidget(self._title_bar)
 
-        # Search field
+        content = QtWidgets.QWidget()
+        content_layout = QtWidgets.QVBoxLayout(content)
+        content_layout.setContentsMargins(16, 0, 16, 8)
+        content_layout.setSpacing(10)
+        shell_layout.addWidget(content, 1)
+
+        toolbar = QtWidgets.QHBoxLayout()
+        self._configuration_combo = QtWidgets.QComboBox()
+        self._configuration_combo.setMinimumWidth(220)
+        self._configuration_combo.setToolTip("Active Envoy configuration")
+        toolbar.addWidget(self._configuration_combo, 1)
+
+        self._refresh_button = QtWidgets.QToolButton()
+        self._refresh_button.setText("↻")
+        self._refresh_button.setToolTip("Refresh catalog")
+        toolbar.addWidget(self._refresh_button)
+
+        self._settings_button = QtWidgets.QToolButton()
+        self._settings_button.setText("⚙")
+        self._settings_button.setToolTip("Settings")
+        toolbar.addWidget(self._settings_button)
+        content_layout.addLayout(toolbar)
+
         self._search_input = QtWidgets.QLineEdit()
-        self._search_input.setPlaceholderText("Search applications...")
-        self._search_input.setMaximumWidth(300)
-        top_layout.addWidget(self._search_input, 1)
+        self._search_input.setPlaceholderText("Search applications…")
+        self._search_input.setClearButtonEnabled(True)
+        content_layout.addWidget(self._search_input)
 
-        # Time Machine button
-        self._time_machine_btn = QtWidgets.QPushButton("Time Machine")
-        self._time_machine_btn.setToolTip("Browse stack history")
-        top_layout.addWidget(self._time_machine_btn)
+        self._status_label = QtWidgets.QLabel("Loading Envoy catalog…")
+        self._status_label.setObjectName("mutedLabel")
+        self._status_label.setWordWrap(True)
+        content_layout.addWidget(self._status_label)
 
-        # Features button (only for production stacks)
-        self._features_btn = QtWidgets.QPushButton("Features")
-        self._features_btn.setToolTip("Manage development features")
-        if not isinstance(self._session.stack_type, _stack.ProductionStack):
-            self._features_btn.setEnabled(False)
-        top_layout.addWidget(self._features_btn)
+        self._application_list = QtWidgets.QListWidget()
+        self._application_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self._application_list.setIconSize(QtCore.QSize(34, 34))
+        self._application_list.setSpacing(2)
+        self._application_list.setUniformItemSizes(False)
+        content_layout.addWidget(self._application_list, 1)
 
-        main_layout.addWidget(top_bar)
-
-        # Application list
-        self._app_list = QtWidgets.QListWidget()
-        self._app_list.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
-        self._app_list.itemDoubleClicked.connect(self._onAppDoubleClicked)
-        main_layout.addWidget(self._app_list, 1)
-
-        # Status bar
-        self._status_bar = QtWidgets.QStatusBar()
-        self.setStatusBar(self._status_bar)
-        self._status_label = QtWidgets.QLabel("")
-        self._status_bar.addPermanentWidget(self._status_label)
+        size_grip_layout = QtWidgets.QHBoxLayout()
+        size_grip_layout.addStretch(1)
+        size_grip_layout.addWidget(QtWidgets.QSizeGrip(self))
+        content_layout.addLayout(size_grip_layout)
 
     def _connectSignals(self) -> None:
-        """Connect UI signals to slots."""
-        self._stack_combo.currentTextChanged.connect(self._onStackChanged)
-        self._search_input.textChanged.connect(self._onSearchChanged)
-        self._time_machine_btn.clicked.connect(self._showTimeMachine)
-        self._features_btn.clicked.connect(self._showFeaturesBrowser)
+        """Connect all UI events."""
+        self._title_bar.closeRequested.connect(self.hide)
+        self._title_bar.minimizeRequested.connect(self.showMinimized)
+        self._refresh_button.clicked.connect(self.refreshRequested)
+        self._settings_button.clicked.connect(self.settingsRequested)
+        self._configuration_combo.currentIndexChanged.connect(self._onConfigurationChanged)
+        self._search_input.textChanged.connect(self._populateApplications)
+        self._search_input.returnPressed.connect(self._launchFirstVisible)
+        self._application_list.itemClicked.connect(self._onItemClicked)
+        self._application_list.itemActivated.connect(self._onItemClicked)
+        self._application_list.customContextMenuRequested.connect(self._showApplicationMenu)
 
-    def _refreshUi(self) -> None:
-        """Refresh the UI with current session state."""
-        # Update window title
-        stack_name = self._session.stack_type.display_name
-        self.setWindowTitle(f"{_constants.PRODUCT_NAME} [{stack_name}]")
+        focus_shortcut = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+F"), self)
+        focus_shortcut.activated.connect(self.focusSearch)
+        escape_shortcut = QtGui.QShortcut(QtGui.QKeySequence("Escape"), self)
+        escape_shortcut.activated.connect(self.hide)
 
-        # Populate stack combobox
-        self._stack_combo.clear()
-        for stack in self._session.all_stacks:
-            icon = _icons.loadIcon(stack.icon) if stack.icon else QtGui.QIcon()
-            self._stack_combo.addItem(icon, stack.name)
+    def setConfigurations(
+        self,
+        configurations: tuple[_models.NamedConfiguration, ...],
+        current_name: str | None,
+    ) -> None:
+        """Populate the named Envoy configuration selector.
 
-        # Set current stack
-        current_idx = self._stack_combo.findText(self._session.active_stack_name or "")
-        if current_idx >= 0:
-            self._stack_combo.setCurrentIndex(current_idx)
+        Args:
+            configurations: Available published configurations.
+            current_name: Currently selected name, or None for automatic discovery.
 
-        # Refresh application list
-        self._refreshAppList()
+        """
+        self._populating_configurations = True
+        self._configuration_combo.clear()
+        self._configuration_combo.addItem("Automatic discovery", None)
+        for configuration in configurations:
+            label = configuration.name
+            if configuration.version:
+                label = f"{label}  ·  {configuration.version}"
+            self._configuration_combo.addItem(label, configuration.name)
+        current_index = self._configuration_combo.findData(current_name)
+        self._configuration_combo.setCurrentIndex(max(current_index, 0))
+        self._populating_configurations = False
 
-    def _refreshAppList(self) -> None:
-        """Refresh the application list based on current search query."""
-        self._app_list.clear()
-        store = self._session.app_store
-        query = self._search_input.text().strip()
+    def setCatalog(
+        self,
+        snapshot: _models.CatalogSnapshot,
+        favorites: frozenset[str],
+        recent_applications: tuple[str, ...],
+    ) -> None:
+        """Display a new catalog snapshot and user ranking state."""
+        self._snapshot = snapshot
+        self._application_map = snapshot.applicationMap()
+        self._favorites = favorites
+        self._recent_applications = recent_applications
+        self._populateApplications()
 
-        if query:
-            apps = store.search(query)
+    def setLoading(self, message: str) -> None:
+        """Show a loading state and disable mutation controls."""
+        self._status_label.setObjectName("mutedLabel")
+        self._status_label.setText(message)
+        self._status_label.style().unpolish(self._status_label)
+        self._status_label.style().polish(self._status_label)
+        self._configuration_combo.setEnabled(False)
+        self._refresh_button.setEnabled(False)
+
+    def setReady(self, message: str = "") -> None:
+        """Restore interactive controls and display a status message."""
+        self._configuration_combo.setEnabled(True)
+        self._refresh_button.setEnabled(True)
+        self._status_label.setObjectName("mutedLabel")
+        self._status_label.setText(message)
+        self._status_label.setVisible(bool(message))
+
+    def setError(self, message: str) -> None:
+        """Display a recoverable catalog or launch error."""
+        self._configuration_combo.setEnabled(True)
+        self._refresh_button.setEnabled(True)
+        self._status_label.setObjectName("errorLabel")
+        self._status_label.setText(message)
+        self._status_label.setVisible(True)
+        self._status_label.style().unpolish(self._status_label)
+        self._status_label.style().polish(self._status_label)
+
+    def showLauncher(self) -> None:
+        """Show, raise, and focus the launcher."""
+        if self.isMinimized():
+            self.showNormal()
         else:
-            # Show all apps, sorted by favorites then used then alphabetical
-            apps = sorted(
-                store.entries,
-                key=lambda e: (not e.favorite, not e.used, e.name.lower()),
+            self.show()
+        self.raise_()
+        self.activateWindow()
+        self.focusSearch()
+
+    def focusSearch(self) -> None:
+        """Focus and select the search field."""
+        self._search_input.setFocus(QtCore.Qt.ShortcutFocusReason)
+        self._search_input.selectAll()
+
+    def allowClose(self) -> None:
+        """Allow the next close event to destroy the window."""
+        self._allow_close = True
+
+    def closeEvent(self, event) -> None:
+        """Hide to tray unless application shutdown is in progress."""
+        if self._allow_close:
+            event.accept()
+            return
+        self.hide()
+        event.ignore()
+
+    def _populateApplications(self) -> None:
+        """Rebuild the visible catalog for the current query."""
+        query = self._search_input.text().strip()
+        self._application_list.clear()
+        if query:
+            applications = _search.rankApplications(
+                self._snapshot.applications,
+                query,
+                self._favorites,
+                self._recent_applications,
             )
+            if applications:
+                for application in applications:
+                    self._addApplicationItem(application)
+            else:
+                self._addEmptyItem("No applications match your search")
+            return
 
-        for app in apps:
-            item = QtWidgets.QListWidgetItem()
-            icon = _icons.loadIcon(app.icon) if app.icon else QtGui.QIcon()
-            item.setIcon(icon)
-            item.setText(app.name)
-            tooltip_parts = [app.command]
-            if app.description:
-                tooltip_parts.append(app.description)
-            item.setToolTip(" | ".join(tooltip_parts))
-            item.setData(QtCore.Qt.ItemDataRole.UserRole, app)
-            self._app_list.addItem(item)
+        displayed: set[str] = set()
+        favorites = [
+            application
+            for application in self._snapshot.applications
+            if application.stable_id in self._favorites
+        ]
+        if favorites:
+            self._addSection("Favorites")
+            for application in favorites:
+                self._addApplicationItem(application)
+                displayed.add(application.stable_id)
 
-    def _onStackChanged(self, stack_name: str) -> None:
-        """Handle stack selection change."""
-        if stack_name != self._session.active_stack_name:
-            self._session.setStack(stack_name, explicit=True)
-            self._refreshUi()
+        recent = [
+            self._application_map[stable_id]
+            for stable_id in self._recent_applications
+            if stable_id in self._application_map and stable_id not in displayed
+        ]
+        if recent:
+            self._addSection("Recent")
+            for application in recent:
+                self._addApplicationItem(application)
+                displayed.add(application.stable_id)
 
-    def _onSearchChanged(self, query: str) -> None:
-        """Handle search text change."""
-        self._refreshAppList()
+        for group in self._snapshot.groups:
+            grouped = [
+                application
+                for application in self._snapshot.applications
+                if application.group_id == group.stable_id
+                and application.stable_id not in displayed
+            ]
+            if not grouped:
+                continue
+            self._addSection(group.name)
+            for application in grouped:
+                self._addApplicationItem(application)
+                displayed.add(application.stable_id)
 
-    def _onAppDoubleClicked(self, item: QtWidgets.QListWidgetItem) -> None:
-        """Handle application double-click to launch."""
-        app = item.data(QtCore.Qt.ItemDataRole.UserRole)
-        if app:
-            self._session.launch(app.command, app.args, label=app.name)
-            if not self._session.config.keep_window_open_on_launch:
-                self.hide()
+        ungrouped = [
+            application
+            for application in self._snapshot.applications
+            if application.stable_id not in displayed
+        ]
+        if ungrouped:
+            if favorites or recent or self._snapshot.groups:
+                self._addSection("Other")
+            for application in ungrouped:
+                self._addApplicationItem(application)
 
-    def _showTimeMachine(self) -> None:
-        """Show the Time Machine dialog."""
-        from . import _checkpoint_dialog
-        dlg = _checkpoint_dialog.CheckpointDialog(self._session, parent=self)
-        dlg.exec_()
+        if not self._snapshot.applications:
+            self._addEmptyItem("No applications are declared for this Envoy configuration")
 
-    def _showFeaturesBrowser(self) -> None:
-        """Show the Features browser dialog."""
-        from . import _features_browser
-        dlg = _features_browser.FeaturesBrowserDialog(self._session, parent=self)
-        dlg.exec_()
+    def _addSection(self, section_name: str) -> None:
+        """Append a non-interactive section label."""
+        item = QtWidgets.QListWidgetItem(section_name.upper())
+        item.setData(_SECTION_ROLE, True)
+        item.setFlags(QtCore.Qt.NoItemFlags)
+        item.setSizeHint(QtCore.QSize(0, 28))
+        font = item.font()
+        font.setPixelSize(11)
+        font.setWeight(QtGui.QFont.DemiBold)
+        item.setFont(font)
+        self._application_list.addItem(item)
 
-    def contextMenuEvent(self, event: QtGui.QContextMenuEvent) -> None:
-        """Handle right-click context menu on application list."""
+    def _addApplicationItem(self, application: _models.ApplicationEntry) -> None:
+        """Append one interactive application row."""
+        detail = application.description or f"envoy {application.command}"
+        item = QtWidgets.QListWidgetItem(f"{application.name}\n{detail}")
+        item.setData(_APPLICATION_ROLE, application.stable_id)
+        item.setIcon(_icons.loadPathIcon(application.icon_path))
+        item.setSizeHint(QtCore.QSize(0, 58))
+        tooltip = self._formatTooltip(application)
+        item.setToolTip(tooltip)
+        self._application_list.addItem(item)
+
+    def _addEmptyItem(self, message: str) -> None:
+        """Append a centered non-interactive empty-state row."""
+        item = QtWidgets.QListWidgetItem(message)
+        item.setFlags(QtCore.Qt.NoItemFlags)
+        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        item.setSizeHint(QtCore.QSize(0, 90))
+        self._application_list.addItem(item)
+
+    def _onItemClicked(self, item: QtWidgets.QListWidgetItem) -> None:
+        """Launch an application from a clicked or activated row."""
+        stable_id = item.data(_APPLICATION_ROLE)
+        if stable_id:
+            self.launchRequested.emit(stable_id, False)
+
+    def _launchFirstVisible(self) -> None:
+        """Launch the first visible application result."""
+        for item_index in range(self._application_list.count()):
+            item = self._application_list.item(item_index)
+            stable_id = item.data(_APPLICATION_ROLE)
+            if stable_id:
+                self.launchRequested.emit(stable_id, False)
+                return
+
+    def _showApplicationMenu(self, point: QtCore.QPoint) -> None:
+        """Show contextual actions for an application row."""
+        item = self._application_list.itemAt(point)
+        if item is None:
+            return
+        stable_id = item.data(_APPLICATION_ROLE)
+        application = self._application_map.get(stable_id)
+        if application is None:
+            return
         menu = QtWidgets.QMenu(self)
+        terminal_action = menu.addAction("Run in terminal")
+        terminal_action.triggered.connect(
+            lambda checked=False, key=stable_id: self.launchRequested.emit(key, True)
+        )
+        favorite_label = (
+            "Remove from favorites" if stable_id in self._favorites else "Add to favorites"
+        )
+        favorite_action = menu.addAction(favorite_label)
+        favorite_action.triggered.connect(
+            lambda checked=False, key=stable_id: self.favoriteToggleRequested.emit(key)
+        )
+        menu.addSeparator()
+        copy_action = menu.addAction("Copy Envoy command")
+        copy_action.triggered.connect(
+            lambda checked=False, key=stable_id: self.copyRequested.emit(key)
+        )
+        menu.exec_(self._application_list.viewport().mapToGlobal(point))
 
-        # Get the app under cursor
-        item = self._app_list.itemAt(event.pos())
-        if item:
-            app = item.data(QtCore.Qt.ItemDataRole.UserRole)
-            if app:
-                # Favorite/unfavorite action
-                if app.favorite:
-                    unfav_action = menu.addAction("Remove from favorites")
-                    unfav_action.triggered.connect(
-                        lambda: self._toggleFavorite(app, False)
-                    )
-                else:
-                    fav_action = menu.addAction("Add to favorites")
-                    fav_action.triggered.connect(
-                        lambda: self._toggleFavorite(app, True)
-                    )
+    def _onConfigurationChanged(self, item_index: int) -> None:
+        """Request a globally persisted configuration change."""
+        if self._populating_configurations or item_index < 0:
+            return
+        self.configurationRequested.emit(self._configuration_combo.itemData(item_index))
 
-                menu.addSeparator()
-
-                # Run in terminal action
-                term_action = menu.addAction("Run in terminal")
-                term_action.triggered.connect(
-                    lambda: self._session.launch(
-                        app.command, app.args, label=app.name, in_terminal=True
-                    )
-                )
-
-                # Copy command action
-                copy_action = menu.addAction("Copy command")
-                copy_action.triggered.connect(
-                    lambda: self._copyCommand(app)
-                )
-
-        menu.exec_(event.globalPos())
-
-    def _toggleFavorite(self, app: _app_store.ApplicationEntry, is_favorite: bool) -> None:
-        """Toggle favorite status for an application."""
-        app.favorite = is_favorite
-        # In a full implementation, save to config
-        self._refreshAppList()
-
-    def _copyCommand(self, app: _app_store.ApplicationEntry) -> None:
-        """Copy the launch command to clipboard."""
-        clipboard = QtWidgets.QApplication.clipboard()
-        cmd = "envoy {} {}".format(app.command, " ".join(app.args))
-        clipboard.setText(cmd)
+    @staticmethod
+    def _formatTooltip(application: _models.ApplicationEntry) -> str:
+        """Build a concise HTML application tooltip."""
+        command_line = " ".join(application.command_line)
+        description = f"<br>{application.description}" if application.description else ""
+        return f"<b>{application.name}</b>{description}<br><code>envoy {command_line}</code>"

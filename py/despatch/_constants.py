@@ -1,50 +1,22 @@
-"""Constants and branding configuration for envoy_despatch."""
+"""Constants shared by Despatch modules."""
 
-import os
-
-# Product identity
-PRODUCT_NAME = "despatch"
+PRODUCT_NAME = "Despatch"
 PRODUCT_VERSION = "0.1.0"
-PRODUCT_DESCRIPTION = "System tray launcher for the envoy runtime"
+PRODUCT_DESCRIPTION = "Application launcher for Envoy-managed environments"
+ORGANIZATION_NAME = "gtvfx-contrib"
+ORGANIZATION_DOMAIN = "gtvfx-contrib.github.io"
 
-# Icon states for the system tray icon
-ICON_STATES = {
-    "default": "envoy_128.ico",
-    "refreshing": "refreshing.svg",
-    "caching": "caching.svg",
-    "checkpoint": "checkpoint.svg",
-}
+MANIFEST_FILENAME = "despatch.json"
+MANIFEST_SCHEMA_VERSION = 1
+RESOURCE_ICONS_DIRECTORY = "resources/icons"
+SETTINGS_SCHEMA_VERSION = 1
+MAX_RECENT_APPLICATIONS = 20
 
-# Default window size
-DEFAULT_WINDOW_WIDTH = 600
-DEFAULT_WINDOW_HEIGHT = 500
+DEFAULT_WINDOW_WIDTH = 720
+DEFAULT_WINDOW_HEIGHT = 640
+MINIMUM_WINDOW_WIDTH = 540
+MINIMUM_WINDOW_HEIGHT = 420
 
-# Search panel height when expanded
-SEARCH_PANEL_HEIGHT = 300
-
-# Time machine expiration duration (24 hours in seconds)
-TIME_MACHINE_EXPIRATION_SECONDS = 86400
-
-# Cache directory for despatch data
-if "APPDATA" in os.environ:
-    DEFAULT_DATA_DIR = os.path.join(os.environ["APPDATA"], "despatch")
-else:
-    DEFAULT_DATA_DIR = os.path.join(os.path.expanduser("~"), ".despatch")
-
-DEFAULT_CONFIG_PATH = os.path.join(DEFAULT_DATA_DIR, "config.json")
-DEFAULT_LOG_DIR = os.path.join(DEFAULT_DATA_DIR, "logs")
-
-# Supported operating systems (matching bl convention)
-SUPPORTED_OPERATING_SYSTEMS = ["windows", "macos", "linux"]
-
-# Default stack mode
-STACK_MODE_CLASSIC = "classic"
-STACK_MODE_HIDDEN = "hidden"
-
-# Keyboard shortcuts
-KEYBOARD_SHORTCUTS = {
-    "quick_set_stack": "Ctrl+P",
-    "search_focus": "Ctrl+F",
-    "launch_selected": "Return",
-    "cancel_operation": "Escape",
-}
+DEFAULT_GLOBAL_SHORTCUT = "Ctrl+Alt+Space"
+AUTOSTART_VALUE_NAME = "Despatch"
+IPC_SERVER_PREFIX = "gtvfx.despatch"

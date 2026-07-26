@@ -1,65 +1,47 @@
-"""Error output dialog for envoy_despatch application launch failures."""
+"""Actionable process and application error dialog."""
 
-from Qt import QtGui, QtWidgets
+from __future__ import annotations
 
+from Qt import QtCore, QtWidgets
 
 
 class ErrorDialog(QtWidgets.QDialog):
-    """Dialog showing captured stdout/stderr from a failed application launch.
-
-    Displays the output in a monospace text area with scroll-to-bottom button,
-    allowing users to review error messages before dismissing.
+    """Display an error summary with optional diagnostic output.
 
     Args:
-        title: Window title.
-        message: Error message to display.
-        output: Captured console output (stdout/stderr).
-        parent: Parent QWidget. Defaults to None.
+        title: Dialog title.
+        message: User-facing error summary.
+        output: Optional process or diagnostic output.
+        parent: Parent widget.
 
     """
 
     def __init__(self, title: str, message: str, output: str = "", parent=None):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.resize(800, 480)
-        self._setupUi(message, output)
+        self.setModal(False)
+        self.resize(640, 420)
 
-    def _setupUi(self, message: str, output: str) -> None:
-        """Initialize the dialog UI."""
         layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(12)
 
-        # Output text area (monospace, read-only)
-        self._output_edit = QtWidgets.QPlainTextEdit(output)
-        self._output_edit.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap) # type: ignore
-        self._output_edit.setReadOnly(True)
-        
-        font = QtGui.QFont("Consolas")
-        font.setStyleHint(QtGui.QFont.TypeWriter) # type: ignore
-        self._output_edit.setFont(font)
-        
-        layout.addWidget(self._output_edit, 1)
+        title_label = QtWidgets.QLabel(title)
+        title_label.setObjectName("productTitle")
+        layout.addWidget(title_label)
 
-        # Message label
         message_label = QtWidgets.QLabel(message)
         message_label.setWordWrap(True)
         layout.addWidget(message_label)
 
-        # Buttons
-        btn_layout = QtWidgets.QHBoxLayout()
-        
-        scroll_btn = QtWidgets.QPushButton("Scroll to Bottom")
-        scroll_btn.clicked.connect(self._scrollToBottom)
-        btn_layout.addWidget(scroll_btn)
-        
-        btn_layout.addStretch()
-        
-        ok_btn = QtWidgets.QPushButton("OK")
-        ok_btn.clicked.connect(self.accept)
-        btn_layout.addWidget(ok_btn)
-        
-        layout.addLayout(btn_layout)
+        if output:
+            output_edit = QtWidgets.QPlainTextEdit()
+            output_edit.setReadOnly(True)
+            output_edit.setPlainText(output)
+            layout.addWidget(output_edit, 1)
 
-    def _scrollToBottom(self) -> None:
-        """Scroll the output text area to the bottom."""
-        scrollbar = self._output_edit.verticalScrollBar()
-        scrollbar.setValue(scrollbar.maximum())
+        button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)

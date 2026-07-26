@@ -1,193 +1,115 @@
-"""System tray icon and context menu for envoy_despatch."""
+"""System tray entry point and compact quick-access menu."""
 
-import datetime
+from __future__ import annotations
 
-from Qt import QtWidgets
+from Qt import QtCore, QtWidgets
 
-from . import _app_store
-from . import _constants
-from . import _icons
-from . import _session
+from . import _constants, _icons, _models
 
+
+def _activationReason(reason_name: str):
+    """Return a tray activation enum across Qt versions."""
+    direct_value = getattr(QtWidgets.QSystemTrayIcon, reason_name, None)
+    if direct_value is not None:
+        return direct_value
+    return getattr(QtWidgets.QSystemTrayIcon.ActivationReason, reason_name)
 
 
 class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
-    """System tray icon for envoy_despatch.
+    """Expose Despatch through asymmetric left- and right-click behavior."""
 
-    Manages the system tray icon with dynamic context menu, four icon states,
-    and integration with the session orchestrator.
-
-    Args:
-        parent: Parent QWidget. Defaults to None.
-
-    """
+    showRequested = QtCore.Signal()
+    launchRequested = QtCore.Signal(str, bool)
+    configurationRequested = QtCore.Signal(object)
+    refreshRequested = QtCore.Signal()
+    settingsRequested = QtCore.Signal()
+    quitRequested = QtCore.Signal()
 
     def __init__(self, parent=None):
-        super().__init__(parent)
-        self._session = _session.getSession()
-        self.setIcon(_icons.loadIcon(_constants.ICON_STATES["default"]))
+        super().__init__(_icons.loadProductIcon(), parent)
+        self._snapshot = _models.CatalogSnapshot(None, (), (), ())
+        self._configuration_name: str | None = None
+        self._configurations: tuple[_models.NamedConfiguration, ...] = ()
+        self._favorites: frozenset[str] = frozenset()
         self.activated.connect(self._onActivated)
+        self.setToolTip(_constants.PRODUCT_DESCRIPTION)
+        self.rebuildMenu()
 
-    def rebuildContextMenu(self) -> None:
-        """Rebuild the context menu from current session state."""
-        existing = self.contextMenu()
-        if existing:
-            existing.hide()
-            existing.deleteLater()
+    def setState(
+        self,
+        snapshot: _models.CatalogSnapshot,
+        configurations: tuple[_models.NamedConfiguration, ...],
+        configuration_name: str | None,
+        favorites: frozenset[str],
+    ) -> None:
+        """Update tray favorites and configuration actions."""
+        self._snapshot = snapshot
+        self._configurations = configurations
+        self._configuration_name = configuration_name
+        self._favorites = favorites
+        config_label = configuration_name or "Automatic discovery"
+        self.setToolTip(f"{_constants.PRODUCT_NAME} · {config_label}")
+        self.rebuildMenu()
 
-        context_menu = QtWidgets.QMenu()
+    def rebuildMenu(self) -> None:
+        """Rebuild the compact native context menu from current state."""
+        existing_menu = self.contextMenu()
+        if existing_menu is not None:
+            existing_menu.deleteLater()
+        menu = QtWidgets.QMenu()
 
-        # stack switcher submenu
-        self._stack_menu = context_menu.addMenu(
-            self._session.stack_type.display_name
-        )
-        self._stack_menu.setIcon(_icons.loadIcon("default"))
-        self._stack_menu.aboutToShow.connect(self._populateStackMenu)
+        show_action = menu.addAction("Show Despatch")
+        show_action.setIcon(_icons.loadProductIcon())
+        show_action.triggered.connect(self.showRequested)
 
-        # Show menu action
-        show_action = context_menu.addAction("Show menu")
-        show_action.triggered.connect(self._session.popupMainWindow)
-
-        # Favorites section
-        if self._session.config.active_stack:
-            store = _app_store.ApplicationStore.fromStack(
-                self._session.stack_type
-            )
-        else:
-            store = _app_store.ApplicationStore([])
-
-        favorites = [a for a in store.applications if a.favorite]
-        context_menu.addSeparator()
-
-        for fav_app in favorites:
-            action = context_menu.addAction(fav_app.name)
-            # Use lambda to capture the command and args at connection time
-            cmd = fav_app.command
-            args = fav_app.args
-            action.triggered.connect(
-                lambda c=cmd, a=args: self._session.launch(c, a)
-            )
-
-        if not favorites:
-            add_fav_action = context_menu.addAction("Add favorites")
-            add_fav_action.setEnabled(False)
-
-        # Control actions
-        context_menu.addSeparator()
-
-        refresh_action = context_menu.addAction("Refresh")
-        refresh_action.triggered.connect(self._session.refresh)
-
-        restart_action = context_menu.addAction("Restart")
-        restart_action.triggered.connect(self._session.restart)
-
-        about_action = context_menu.addAction("About")
-        about_action.triggered.connect(self._showAbout)
-
-        exit_action = context_menu.addAction("Exit")
-        exit_action.triggered.connect(self._session.quit)
-
-        self.setContextMenu(context_menu)
-
-    def _populateStackMenu(self) -> None:
-        """Populate the stack submenu with available stacks."""
-        if self._stack_menu.actions():
-            return  # Already populated
-
-        session = self._session
-        current_stack = session.config.active_stack
-
-        # Show favorite stacks first
-        fav_stacks = [
-            p for p in session.all_stacks
-            if p.name in session.config.favorite_stacks
-            and p.name != current_stack
+        favorite_applications = [
+            application
+            for application in self._snapshot.applications
+            if application.stable_id in self._favorites
         ]
-
-        for stack in fav_stacks:
-            action = self._stack_menu.addAction(
-                f"{_icons.HEART_ICON} {stack.name}"
-            )
-            action.triggered.connect(
-                session.setStack(stack.name, explicit=False)
-            )
-
-        if fav_stacks:
-            self._stack_menu.addSeparator()
-
-        # Show all stacks grouped by attribute
-        for group_name, stacks in session.groupedStacks():
-            if group_name and any(p.name != current_stack for p in stacks):
-                if self._stack_menu.actions():
-                    self._stack_menu.addSeparator()
-                header = QtWidgets.QWidgetAction(self._stack_menu)
-                label = QtWidgets.QLabel(group_name, self._stack_menu)
-                label.setStyleSheet("font-weight: bold; padding: 4px;")
-                header.setDefaultWidget(label)
-                self._stack_menu.addAction(header)
-
-            for stack in stacks:
-                if stack.name != current_stack:
-                    action = self._stack_menu.addAction(stack.name)
-                    if stack.is_inactive:
-                        action.setText(f"{_icons.PADLOCK_ICON} {stack.name}")
-                    action.triggered.connect(
-                        session.setStack(stack.name, explicit=False)
+        if favorite_applications:
+            menu.addSeparator()
+            for application in favorite_applications:
+                action = menu.addAction(
+                    _icons.loadPathIcon(application.icon_path),
+                    application.name,
+                )
+                action.triggered.connect(
+                    lambda checked=False, stable_id=application.stable_id: (
+                        self.launchRequested.emit(stable_id, False)
                     )
+                )
 
-    def setIconState(self, state: str) -> None:
-        """Update the tray icon and tooltip based on current state.
-
-        Args:
-            state: One of "default", "refreshing", "caching", "checkpoint".
-
-        """
-        icon_path = _constants.ICON_STATES.get(state, _constants.ICON_STATES["default"])
-        self.setIcon(_icons.loadIcon(icon_path))
-        self.updateTooltip(state)
-
-    def updateTooltip(self, state: str | None = None) -> None:
-        """Update the tray icon tooltip.
-
-        Args:
-            state: Icon state to format tooltip for. Defaults to current state.
-
-        """
-        if state is None:
-            icon = self.icon()
-            for key, path in _constants.ICON_STATES.items():
-                if icon.pixmap(24, 24).isNull() or str(icon) == str(_icons.loadIcon(path)):
-                    state = key
-                    break
-
-        session = self._session
-        if state == "checkpoint" and session.config.time_machine_expiration:
-            dt = datetime.datetime.fromisoformat(session.config.time_machine_expiration)
-            tooltip = "Time Machine until {}".format(
-                dt.strftime("%Y-%m-%d %H:%M")
-            )
-        else:
-            stack_name = session.stack_type.display_name
-            tooltip = f"{_constants.PRODUCT_NAME} [{stack_name}]"
-
-        self.setToolTip(tooltip)
-
-    def _onActivated(self, reason: QtWidgets.QSystemTrayIcon.ActivationReason) -> None:
-        """Handle tray icon activation (left click)."""
-        if reason == QtWidgets.QSystemTrayIcon.ActivationReason.Trigger:
-            self._session.popupMainWindow()
-
-    def _showAbout(self) -> None:
-        """Show the about dialog."""
-        msg = (
-            f"<b>{_constants.PRODUCT_NAME}</b><br/>"
-            f"Version: {_constants.PRODUCT_VERSION}<br/>"
-            f"{self._session.stack_type.display_name}"
+        menu.addSeparator()
+        configuration_menu = menu.addMenu(self._configuration_name or "Automatic discovery")
+        automatic_action = configuration_menu.addAction("Automatic discovery")
+        automatic_action.setCheckable(True)
+        automatic_action.setChecked(self._configuration_name is None)
+        automatic_action.triggered.connect(
+            lambda checked=False: self.configurationRequested.emit(None)
         )
-        QtWidgets.QMessageBox.about(self, f"About {_constants.PRODUCT_NAME}", msg)
+        if self._configurations:
+            configuration_menu.addSeparator()
+        for configuration in self._configurations:
+            action = configuration_menu.addAction(configuration.name)
+            action.setCheckable(True)
+            action.setChecked(configuration.name == self._configuration_name)
+            action.triggered.connect(
+                lambda checked=False, config_name=configuration.name: (
+                    self.configurationRequested.emit(config_name)
+                )
+            )
 
+        refresh_action = menu.addAction("Refresh")
+        refresh_action.triggered.connect(self.refreshRequested)
+        settings_action = menu.addAction("Settings")
+        settings_action.triggered.connect(self.settingsRequested)
+        menu.addSeparator()
+        quit_action = menu.addAction("Quit")
+        quit_action.triggered.connect(self.quitRequested)
+        self.setContextMenu(menu)
 
-# Icon constants for UI elements
-HEART_ICON = "\u2665"  # Heart symbol
-PADLOCK_ICON = "\U0001F512"  # Padlock emoji
-
+    def _onActivated(self, reason) -> None:
+        """Show the main UI only for a left-click activation."""
+        if reason == _activationReason("Trigger"):
+            self.showRequested.emit()
