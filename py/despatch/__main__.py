@@ -5,7 +5,7 @@ import os
 import sys
 
 
-def _parse_args():
+def _parseArgs():
     """Parse command-line arguments.
 
     Returns:
@@ -39,7 +39,7 @@ def _parse_args():
     return parser.parse_args()
 
 
-def _setup_app():
+def _setupApp():
     """Initialize the Qt application with despatch-specific settings.
 
     Returns:
@@ -82,7 +82,7 @@ def main():
     """Main entry point for envoy_despatch."""
     from . import _config, _log, _session, _tray_icon
 
-    args = _parse_args()
+    args = _parseArgs()
 
     # Configure logging
     _log.setupLogging(level=args.log_level, log_directory=args.log_directory)
@@ -91,7 +91,7 @@ def main():
     log.info("Starting envoy_despatch")
 
     # Initialize Qt application
-    app = _setup_app()
+    app = _setupApp()
     log.debug("Qt application initialized")
 
     # Create and initialize session

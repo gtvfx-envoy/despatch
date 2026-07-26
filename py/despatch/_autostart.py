@@ -4,7 +4,7 @@ import os
 import sys
 
 
-def get_autostart_path() -> str | None:
+def getAutostartPath() -> str | None:
     """Return the platform-specific autostart directory path.
 
     Returns:
@@ -23,14 +23,14 @@ def get_autostart_path() -> str | None:
     return None
 
 
-def is_autostart_enabled() -> bool:
+def isAutostartEnabled() -> bool:
     """Check if envoy_despatch is registered for auto-start.
 
     Returns:
         True if an autostart entry exists.
 
     """
-    autostart_dir = get_autostart_path()
+    autostart_dir = getAutostartPath()
     if not autostart_dir:
         return False
 
@@ -46,14 +46,14 @@ def is_autostart_enabled() -> bool:
         return os.path.exists(entry)
 
 
-def enable_autostart() -> bool:
+def enableAutostart() -> bool:
     """Register envoy_despatch for auto-start on login.
 
     Returns:
         True if registration succeeded.
 
     """
-    autostart_dir = get_autostart_path()
+    autostart_dir = getAutostartPath()
     if not autostart_dir:
         return False
 
@@ -120,14 +120,14 @@ def enable_autostart() -> bool:
             return False
 
 
-def disable_autostart() -> bool:
+def disableAutostart() -> bool:
     """Remove the auto-start registration for envoy_despatch.
 
     Returns:
         True if removal succeeded.
 
     """
-    autostart_dir = get_autostart_path()
+    autostart_dir = getAutostartPath()
     if not autostart_dir:
         return False
 

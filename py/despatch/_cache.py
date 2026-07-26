@@ -52,7 +52,7 @@ class CacheTask:
         self._error = value
         self._status = "failed"
 
-    def is_complete(self) -> bool:
+    def isComplete(self) -> bool:
         """Whether the task has finished (success or failure)."""
         return self._status in ("completed", "failed")
 
@@ -136,7 +136,7 @@ class CacheManager:
 
         """
         task = self._tasks.get(name)
-        if task and not task.is_complete():
+        if task and not task.isComplete():
             task.status = "completed"
             task.progress = 1.0
             if self._on_progress:
@@ -151,7 +151,7 @@ class CacheManager:
 
         """
         task = self._tasks.get(name)
-        if task and not task.is_complete():
+        if task and not task.isComplete():
             task.error = error
 
     def check_completion(self) -> bool:
@@ -163,7 +163,7 @@ class CacheManager:
         """
         if not self._tasks:
             return True
-        if all(t.is_complete() for t in self._tasks.values()):
+        if all(t.isComplete() for t in self._tasks.values()):
             if self._on_complete:
                 self._on_complete()
             return True

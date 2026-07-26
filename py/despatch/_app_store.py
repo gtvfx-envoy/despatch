@@ -115,7 +115,7 @@ class ApplicationStore:
         return [e for e in self._entries if e.favorite]
 
     @classmethod
-    def from_stack(cls, stack) -> "ApplicationStore":
+    def fromStack(cls, stack) -> "ApplicationStore":
         """Create an ApplicationStore from a stack object.
 
         In a full implementation, this would query the envoy backend for
