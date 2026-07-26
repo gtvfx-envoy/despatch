@@ -1,11 +1,8 @@
 """Features browser for envoy_despatch development feature management."""
 
+from Qt import QtCore, QtWidgets
 
-from . import _qt, _session
-
-QtWidgets = _qt.QtWidgets
-QtCore = _qt.QtCore
-QtGui = _qt.QtGui
+from . import _session
 
 
 class FeatureEntry:
@@ -18,7 +15,6 @@ class FeatureEntry:
         active: Whether this feature is currently active.
 
     """
-
     def __init__(
         self,
         name: str,
@@ -43,14 +39,13 @@ class FeaturesBrowserDialog(QtWidgets.QDialog):
         parent: Parent QWidget. Defaults to None.
 
     """
-
     def __init__(self, session: _session.Session, parent=None):
         super().__init__(parent)
         self._session = session
         self.setWindowTitle("Features Browser")
         self.setMinimumSize(700, 500)
-        self._setup_ui()
-        self._load_features()
+        self._setupUi()
+        self._loadFeatures()
 
     def _setupUi(self) -> None:
         """Initialize the dialog UI."""

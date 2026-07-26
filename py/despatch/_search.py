@@ -2,11 +2,10 @@
 
 import re
 
-from . import _app_store, _qt
+from Qt import QtCore, QtWidgets
 
-QtWidgets = _qt.QtWidgets
-QtCore = _qt.QtCore
-QtGui = _qt.QtGui
+from . import _app_store
+
 
 
 class SearchPanel(QtWidgets.QWidget):

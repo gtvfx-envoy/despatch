@@ -2,11 +2,9 @@
 
 import os
 
-from . import _qt, _session
+from Qt import QtCore, QtWidgets
 
-QtWidgets = _qt.QtWidgets
-QtCore = _qt.QtCore
-QtGui = _qt.QtGui
+from . import _session
 
 
 class CustomStackPickerDialog(QtWidgets.QDialog):

@@ -188,7 +188,7 @@ class Process:
         return f"{self.__class__.__name__}(label={self._label!r}, {status})"
 
 
-def launch_in_terminal(command: str, args: list | None = None) -> bool:
+def launchInTerminal(command: str, args: list | None = None) -> bool:
     """Launch a command in a new terminal window.
 
     Cross-platform helper for opening applications in dedicated terminal windows.

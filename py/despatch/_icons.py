@@ -1,25 +1,27 @@
 """Icon loading and caching utilities for envoy_despatch."""
 
+from pathlib import Path
 import os
 
-from PySide6.QtGui import QIcon, QPixmap
+from Qt import QtGui
+
 
 # Cache directory relative to this module's resources folder
-_RESOURCES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
-_ICON_CACHE: dict = {}
+_ARTIFACTS_DIR = Path(__file__).parents[1] / "artifacts"
+_ICON_CACHE: dict[str, QtGui.QIcon] = {}
 
 
-def get_resources_dir() -> str:
+def getResourcesDir() -> Path:
     """Return the absolute path to the resources directory.
 
     Returns:
         Path to the resources folder.
 
     """
-    return _RESOURCES_DIR
+    return _ARTIFACTS_DIR
 
 
-def load_icon(name: str) -> QIcon:
+def loadIcon(name: str) -> QtGui.QIcon:
     """Load an icon by name from the resources/icons directory.
 
     Icons are cached after first load to avoid repeated disk I/O.
@@ -35,21 +37,21 @@ def load_icon(name: str) -> QIcon:
     if name in _ICON_CACHE:
         return _ICON_CACHE[name]
 
-    icon_path = os.path.join(_RESOURCES_DIR, "icons", name)
-    if not os.path.exists(icon_path):
+    icon_path = _ARTIFACTS_DIR / "icons" / name
+    if not icon_path.exists():
         # Try without extension
         for ext in (".png", ".svg", ".ico", ".jpg"):
-            candidate = icon_path + ext
-            if os.path.exists(candidate):
+            candidate = icon_path.with_suffix(ext)
+            if candidate.exists():
                 icon_path = candidate
                 break
 
-    icon = QIcon(icon_path) if os.path.exists(icon_path) else QIcon()
+    icon = QtGui.QIcon(icon_path) if os.path.exists(icon_path) else QtGui.QIcon()
     _ICON_CACHE[name] = icon
     return icon
 
 
-def load_pixmap(name: str) -> QPixmap | None:
+def loadPixmap(name: str) -> QtGui.QPixmap | None:
     """Load a pixmap by name from the resources/icons directory.
 
     Args:
@@ -59,10 +61,10 @@ def load_pixmap(name: str) -> QPixmap | None:
         QPixmap loaded from disk, or None if not found.
 
     """
-    icon = load_icon(name)
+    icon = loadIcon(name)
     return icon.pixmap(24, 24) if not icon.isNull() else None
 
 
-def clear_cache() -> None:
+def clearCache() -> None:
     """Clear the icon cache."""
     _ICON_CACHE.clear()

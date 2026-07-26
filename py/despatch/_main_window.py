@@ -1,11 +1,13 @@
 """Main application window for envoy_despatch."""
 
+from Qt import QtCore, QtGui, QtWidgets
 
-from . import _app_store, _constants, _icons, _qt, _session, _stack
+from . import _app_store
+from . import _constants
+from . import _icons
+from . import _session
+from . import _stack
 
-QtWidgets = _qt.QtWidgets
-QtCore = _qt.QtCore
-QtGui = _qt.QtGui
 
 
 class MainWindow(QtWidgets.QMainWindow):

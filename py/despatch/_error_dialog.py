@@ -1,11 +1,7 @@
 """Error output dialog for envoy_despatch application launch failures."""
 
+from Qt import QtGui, QtWidgets
 
-from . import _qt
-
-QtWidgets = _qt.QtWidgets
-QtCore = _qt.QtCore
-QtGui = _qt.QtGui
 
 
 class ErrorDialog(QtWidgets.QDialog):
@@ -26,7 +22,7 @@ class ErrorDialog(QtWidgets.QDialog):
         super().__init__(parent)
         self.setWindowTitle(title)
         self.resize(800, 480)
-        self._setup_ui(message, output)
+        self._setupUi(message, output)
 
     def _setupUi(self, message: str, output: str) -> None:
         """Initialize the dialog UI."""
@@ -34,11 +30,11 @@ class ErrorDialog(QtWidgets.QDialog):
 
         # Output text area (monospace, read-only)
         self._output_edit = QtWidgets.QPlainTextEdit(output)
-        self._output_edit.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap)
+        self._output_edit.setLineWrapMode(QtWidgets.QPlainTextEdit.NoWrap) # type: ignore
         self._output_edit.setReadOnly(True)
         
         font = QtGui.QFont("Consolas")
-        font.setStyleHint(QtGui.QFont.TypeWriter)
+        font.setStyleHint(QtGui.QFont.TypeWriter) # type: ignore
         self._output_edit.setFont(font)
         
         layout.addWidget(self._output_edit, 1)

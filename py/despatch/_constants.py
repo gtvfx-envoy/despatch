@@ -9,7 +9,7 @@ PRODUCT_DESCRIPTION = "System tray launcher for the envoy runtime"
 
 # Icon states for the system tray icon
 ICON_STATES = {
-    "default": "default.svg",
+    "default": "envoy_128.ico",
     "refreshing": "refreshing.svg",
     "caching": "caching.svg",
     "checkpoint": "checkpoint.svg",

@@ -3,7 +3,10 @@
 import datetime
 from typing import Optional
 
-from . import _app_store, _config, _process, _stack
+from . import _app_store
+from . import _config
+from . import _process
+from . import _stack
 
 
 class Session:
@@ -159,8 +162,6 @@ class Session:
         if proc.start():
             self._active_processes[label] = proc
             # Mark as used in config
-            if label:
-                self._config.addFavorite(label)  # Track usage history
             return proc
         return None
 

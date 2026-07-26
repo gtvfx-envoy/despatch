@@ -46,10 +46,12 @@ def _setupApp():
         The QApplication instance.
 
     """
-    from . import __version__, _icons, _log, _qt
+    from Qt import QtWidgets
+    from . import __version__
+    from . import _icons
+    from . import _log
 
-    QtWidgets = _qt.QtWidgets
-    log = _log.get_logger(__name__)
+    log = _log.getLogger(__name__)
 
     app = QtWidgets.QApplication.instance()
     if app is None:
@@ -64,13 +66,13 @@ def _setupApp():
     os.environ.setdefault("QT_ENABLE_HIGHDPI_SCALING", "1")
 
     # Apply stylesheet
-    style_path = os.path.join(_icons.get_resources_dir(), "style.qss")
+    style_path = os.path.join(_icons.getResourcesDir(), "style.qss")
     if os.path.exists(style_path):
         with open(style_path, "r") as f:
             app.setStyleSheet(f.read()) # type: ignore
 
     # Set application icon
-    icon = _icons.load_icon("default.svg")
+    icon = _icons.loadIcon("envoy_128.ico")
     if not icon.isNull():
         app.setWindowIcon(icon) # type: ignore
 
@@ -80,13 +82,16 @@ def _setupApp():
 
 def main():
     """Main entry point for envoy_despatch."""
-    from . import _config, _log, _session, _tray_icon
+    from . import _config
+    from . import _log
+    from . import _session
+    from . import _tray_icon
 
     args = _parseArgs()
 
     # Configure logging
     _log.setupLogging(level=args.log_level, log_directory=args.log_directory)
-    log = _log.get_logger(__name__)
+    log = _log.getLogger(__name__)
 
     log.info("Starting envoy_despatch")
 
@@ -116,7 +121,7 @@ def main():
     if args.popup:
         session.popupMainWindow()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

@@ -2,11 +2,13 @@
 
 import datetime
 
-from . import _app_store, _constants, _icons, _qt, _session
+from Qt import QtWidgets
 
-QtWidgets = _qt.QtWidgets
-QtCore = _qt.QtCore
-QtGui = _qt.QtGui
+from . import _app_store
+from . import _constants
+from . import _icons
+from . import _session
+
 
 
 class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
@@ -23,7 +25,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._session = _session.getSession()
-        self.setIcon(_icons.load_icon(_constants.ICON_STATES["default"]))
+        self.setIcon(_icons.loadIcon(_constants.ICON_STATES["default"]))
         self.activated.connect(self._onActivated)
 
     def rebuildContextMenu(self) -> None:
@@ -39,7 +41,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
         self._stack_menu = context_menu.addMenu(
             self._session.stack_type.display_name
         )
-        self._stack_menu.setIcon(_icons.load_icon("default"))
+        self._stack_menu.setIcon(_icons.loadIcon("default"))
         self._stack_menu.aboutToShow.connect(self._populateStackMenu)
 
         # Show menu action

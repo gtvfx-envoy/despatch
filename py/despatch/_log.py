@@ -40,7 +40,7 @@ def setupLogging(level: str = "ERROR", log_directory: str | None = None) -> logg
     return logger
 
 
-def get_logger(name: str) -> logging.Logger:
+def getLogger(name: str) -> logging.Logger:
     """Return a child logger with the given name.
 
     Args:
