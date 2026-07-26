@@ -1,10 +1,8 @@
 """Custom stack picker for envoy_despatch."""
 
 import os
-from typing import List, Optional
 
-from . import _qt
-from . import _session, _config, _icons, _constants
+from . import _qt, _session
 
 QtWidgets = _qt.QtWidgets
 QtCore = _qt.QtCore
@@ -88,15 +86,15 @@ class CustomStackPickerDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.information(
                 self,
                 "Custom stack",
-                "Loaded custom stack: {}\n\n"
-                "(This requires integration with the envoy backend.)".format(path),
+                f"Loaded custom stack: {path}\n\n"
+                "(This requires integration with the envoy backend.)",
             )
             self.close()
         else:
             QtWidgets.QMessageBox.warning(
                 self,
                 "Error",
-                "File not found: {}".format(path),
+                f"File not found: {path}",
             )
 
     def _browseFile(self) -> None:
@@ -116,7 +114,7 @@ class CustomStackPickerDialog(QtWidgets.QDialog):
             QtWidgets.QMessageBox.information(
                 self,
                 "Custom stack",
-                "Loaded custom stack: {}\n\n"
-                "(This requires integration with the envoy backend.)".format(filepath),
+                f"Loaded custom stack: {filepath}\n\n"
+                "(This requires integration with the envoy backend.)",
             )
             self.close()

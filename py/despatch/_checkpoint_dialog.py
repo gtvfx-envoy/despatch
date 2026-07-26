@@ -1,14 +1,10 @@
 """Time Machine dialog for envoy_despatch stack version rollback."""
 
 import datetime
-from typing import List, Optional
 
-from . import _qt
-from . import _session, _config, _icons, _constants
+from Qt import QtWidgets
 
-QtWidgets = _qt.QtWidgets
-QtCore = _qt.QtCore
-QtGui = _qt.QtGui
+from . import _session
 
 
 class CheckpointDialog(QtWidgets.QDialog):
@@ -28,8 +24,8 @@ class CheckpointDialog(QtWidgets.QDialog):
         self._session = session
         self.setWindowTitle("Time Machine")
         self.setMinimumSize(600, 400)
-        self._setup_ui()
-        self._load_recent_versions()
+        self._setupUi()
+        self._loadRecentVersions()
 
     def _setupUi(self) -> None:
         """Initialize the dialog UI."""
@@ -74,7 +70,7 @@ class CheckpointDialog(QtWidgets.QDialog):
         placeholder = QtWidgets.QListWidgetItem(
             "No version history available (placeholder)"
         )
-        placeholder.setEnabled(False)
+        # placeholder.setEnabled(False)  # type: ignore
         self._version_list.addItem(placeholder)
 
     def _onVersionSelected(self, item: QtWidgets.QListWidgetItem) -> None:
@@ -82,7 +78,7 @@ class CheckpointDialog(QtWidgets.QDialog):
         version_name = item.text()
         
         # Set Time Machine expiration to 24 hours from now
-        expiration = datetime.datetime.now() + datetime.timedelta(hours=24)
+        expiration = datetime.datetime.now(datetime.UTC) + datetime.timedelta(hours=24)
         self._session.config.time_machine_expiration = expiration.isoformat()
         
         # In a full implementation, this would switch the stack to the selected version

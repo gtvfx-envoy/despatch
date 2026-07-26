@@ -2,11 +2,10 @@
 
 import json
 import os
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from dataclasses import field
+from typing import ClassVar
 
 
-@dataclass
 class ApplicationEntry:
     """Represents a single application that can be launched.
 
@@ -25,12 +24,12 @@ class ApplicationEntry:
 
     name: str
     command: str
-    args: List[str] = field(default_factory=list)
-    icon: Optional[str] = None
-    description: Optional[str] = None
+    args: list[str] = field(default_factory=list)
+    icon: str | None = None
+    description: str | None = None
     favorite: bool = False
     used: bool = False
-    parent: Optional[str] = None
+    parent: str | None = None
     in_terminal: bool = False
 
     def to_dict(self) -> dict:
@@ -87,31 +86,31 @@ class ApplicationStore:
 
     """
 
-    _cache: Dict[str, "ApplicationStore"] = {}
+    _cache: ClassVar[dict[str, "ApplicationStore"]] = {}
 
-    def __init__(self, entries: Optional[List[ApplicationEntry]] = None):
-        self._entries: List[ApplicationEntry] = sorted(
+    def __init__(self, entries: list[ApplicationEntry] | None = None):
+        self._entries: list[ApplicationEntry] = sorted(
             entries or [], key=lambda e: e.name.lower()
         )
-        self._stacks: List = []  # Will be set by from_stack
+        self._stacks: list = []  # Will be set by from_stack
 
     @property
-    def entries(self) -> List[ApplicationEntry]:
+    def entries(self) -> list[ApplicationEntry]:
         """List of all application entries, sorted by name."""
         return list(self._entries)
 
     @property
-    def applications(self) -> List[ApplicationEntry]:
+    def applications(self) -> list[ApplicationEntry]:
         """Alias for entries (compatibility)."""
         return self.entries
 
     @property
-    def stacks(self) -> List:
+    def stacks(self) -> list:
         """List of stacks associated with this store."""
         return self._stacks
 
     @property
-    def favorites(self) -> List[ApplicationEntry]:
+    def favorites(self) -> list[ApplicationEntry]:
         """Filter to only favorite applications."""
         return [e for e in self._entries if e.favorite]
 
@@ -150,7 +149,7 @@ class ApplicationStore:
         
         return store
 
-    def findByName(self, name: str) -> Optional[ApplicationEntry]:
+    def findByName(self, name: str) -> ApplicationEntry | None:
         """Find an application by exact name match.
 
         Args:
@@ -165,7 +164,7 @@ class ApplicationStore:
                 return entry
         return None
 
-    def findByCommand(self, command: str) -> Optional[ApplicationEntry]:
+    def findByCommand(self, command: str) -> ApplicationEntry | None:
         """Find an application by launch command.
 
         Args:
@@ -180,7 +179,7 @@ class ApplicationStore:
                 return entry
         return None
 
-    def search(self, query: str) -> List[ApplicationEntry]:
+    def search(self, query: str) -> list[ApplicationEntry]:
         """Fuzzy search across application names and commands.
 
         Args:

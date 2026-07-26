@@ -1,7 +1,7 @@
 """Cache manager for envoy_despatch package caching."""
 
 import threading
-from typing import Callable, Optional
+from collections.abc import Callable
 
 
 class CacheProgress:
@@ -13,7 +13,7 @@ class CacheProgress:
 
     """
 
-    def __init__(self, total_packages: int = 0, callback: Optional[Callable] = None):
+    def __init__(self, total_packages: int = 0, callback: Callable | None = None):
         self._total = total_packages
         self._current = 0
         self._callback = callback or (lambda x: None)
@@ -70,8 +70,8 @@ class CacheManager:
 
     def __init__(self, session):
         self._session = session
-        self._active_cache: Optional[CacheProgress] = None
-        self._cache_thread: Optional[threading.Thread] = None
+        self._active_cache: CacheProgress | None = None
+        self._cache_thread: threading.Thread | None = None
 
     @property
     def is_active(self) -> bool:
@@ -81,7 +81,7 @@ class CacheManager:
     def startCache(
         self,
         total_packages: int,
-        callback: Optional[Callable] = None,
+        callback: Callable | None = None,
     ) -> CacheProgress:
         """Start a new cache operation.
 
@@ -131,6 +131,6 @@ class CacheManager:
         return False
 
     @property
-    def progress(self) -> Optional[CacheProgress]:
+    def progress(self) -> CacheProgress | None:
         """Get the current cache progress, or None if not active."""
         return self._active_cache

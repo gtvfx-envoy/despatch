@@ -5,7 +5,6 @@ version application (rollback).
 """
 
 from datetime import datetime
-from typing import List, Optional
 
 from Qt import QtCore, QtWidgets
 
@@ -20,7 +19,7 @@ class VersionEntry:
 
     """
 
-    def __init__(self, name: str, timestamp: datetime, packages: Optional[List[str]] = None):
+    def __init__(self, name: str, timestamp: datetime, packages: list[str] | None = None):
         self._name = name
         self._timestamp = timestamp
         self._packages = packages or []
@@ -36,14 +35,12 @@ class VersionEntry:
         return self._timestamp
 
     @property
-    def packages(self) -> List[str]:
+    def packages(self) -> list[str]:
         """Packages included in this version."""
         return list(self._packages)
 
     def __repr__(self) -> str:
-        return "VersionEntry(name={!r}, date={})".format(
-            self._name, self._timestamp.isoformat()
-        )
+        return f"VersionEntry(name={self._name!r}, date={self._timestamp.isoformat()})"
 
 
 class PackageDiff:
@@ -58,33 +55,31 @@ class PackageDiff:
 
     def __init__(
         self,
-        added: Optional[List[str]] = None,
-        removed: Optional[List[str]] = None,
-        changed: Optional[List[str]] = None,
+        added: list[str] | None = None,
+        removed: list[str] | None = None,
+        changed: list[str] | None = None,
     ):
         self._added = added or []
         self._removed = removed or []
         self._changed = changed or []
 
     @property
-    def added(self) -> List[str]:
+    def added(self) -> list[str]:
         """Packages added in the newer version."""
         return list(self._added)
 
     @property
-    def removed(self) -> List[str]:
+    def removed(self) -> list[str]:
         """Packages removed in the newer version."""
         return list(self._removed)
 
     @property
-    def changed(self) -> List[str]:
+    def changed(self) -> list[str]:
         """Packages present in both versions but modified."""
         return list(self._changed)
 
     def __repr__(self) -> str:
-        return "PackageDiff(added={}, removed={}, changed={})".format(
-            len(self._added), len(self._removed), len(self._changed)
-        )
+        return f"PackageDiff(added={len(self._added)}, removed={len(self._removed)}, changed={len(self._changed)})"
 
 
 class CheckpointDialog(QtWidgets.QDialog):
@@ -105,7 +100,7 @@ class CheckpointDialog(QtWidgets.QDialog):
         self.setWindowTitle("envoy_despatch — Checkpoint")
         self.setMinimumSize(700, 500)
 
-        self._versions: List[VersionEntry] = []
+        self._versions: list[VersionEntry] = []
         self._setup_ui()
         self._connect_signals()
 
@@ -153,7 +148,7 @@ class CheckpointDialog(QtWidgets.QDialog):
         """Wire up signal/slot connections."""
         self._version_list.currentItemChanged.connect(self._on_version_selected)
 
-    def populate_versions(self, versions: List[VersionEntry]) -> None:
+    def populate_versions(self, versions: list[VersionEntry]) -> None:
         """Populate the version list.
 
         Args:
@@ -195,14 +190,14 @@ class CheckpointDialog(QtWidgets.QDialog):
 
         """
         lines = [
-            "Version: {}".format(entry.name),
+            f"Version: {entry.name}",
             "Date: {}".format(entry.timestamp.strftime("%Y-%m-%d %H:%M:%S")),
-            "Packages ({}):".format(len(entry.packages)),
+            f"Packages ({len(entry.packages)}):",
         ]
         for pkg in entry.packages[:50]:  # Limit display
-            lines.append("  - {}".format(pkg))
+            lines.append(f"  - {pkg}")
         if len(entry.packages) > 50:
-            lines.append("  ... and {} more".format(len(entry.packages) - 50))
+            lines.append(f"  ... and {len(entry.packages) - 50} more")
 
         self._diff_text.setPlainText("\n".join(lines))
 
@@ -225,14 +220,14 @@ class CheckpointDialog(QtWidgets.QDialog):
         if diff.added:
             lines.append("Added:")
             for pkg in diff.added:
-                lines.append("  + {}".format(pkg))
+                lines.append(f"  + {pkg}")
         if diff.removed:
             lines.append("\nRemoved:")
             for pkg in diff.removed:
-                lines.append("  - {}".format(pkg))
+                lines.append(f"  - {pkg}")
         if diff.changed:
             lines.append("\nChanged:")
             for pkg in diff.changed:
-                lines.append("  ~ {}".format(pkg))
+                lines.append(f"  ~ {pkg}")
 
         self._diff_text.setPlainText("\n".join(lines) if lines else "No changes.")

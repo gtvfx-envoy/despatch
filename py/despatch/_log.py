@@ -5,7 +5,7 @@ import os
 import sys
 
 
-def setup_logging(level: str = "ERROR", log_directory: str = None) -> logging.Logger:
+def setupLogging(level: str = "ERROR", log_directory: str | None = None) -> logging.Logger:
     """Configure the application logger.
 
     Args:

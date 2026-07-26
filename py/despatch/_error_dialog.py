@@ -1,9 +1,7 @@
 """Error output dialog for envoy_despatch application launch failures."""
 
-from typing import Optional
 
 from . import _qt
-from . import _constants
 
 QtWidgets = _qt.QtWidgets
 QtCore = _qt.QtCore

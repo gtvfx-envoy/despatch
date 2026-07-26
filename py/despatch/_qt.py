@@ -27,4 +27,4 @@ QtCore = Qt.QtCore
 QtGui = Qt.QtGui
 QtNetwork = Qt.QtNetwork
 
-__all__ = ["QtWidgets", "QtCore", "QtGui", "QtNetwork"]
+__all__ = ["QtCore", "QtGui", "QtNetwork", "QtWidgets"]

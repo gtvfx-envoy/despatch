@@ -1,6 +1,6 @@
 """Package caching manager for envoy_despatch."""
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
 
 class CacheTask:
@@ -17,7 +17,7 @@ class CacheTask:
         self._name = name
         self._status = "pending"
         self._progress: float = 0.0
-        self._error: Optional[str] = None
+        self._error: str | None = None
 
     @property
     def name(self) -> str:
@@ -43,7 +43,7 @@ class CacheTask:
         self._progress = max(0.0, min(1.0, value))
 
     @property
-    def error(self) -> Optional[str]:
+    def error(self) -> str | None:
         """Error message if the task failed."""
         return self._error
 
@@ -57,7 +57,7 @@ class CacheTask:
         return self._status in ("completed", "failed")
 
     def __repr__(self) -> str:
-        return "CacheTask(name={!r}, status={!r})".format(self._name, self._status)
+        return f"CacheTask(name={self._name!r}, status={self._status!r})"
 
 
 class CacheManager:
@@ -74,8 +74,8 @@ class CacheManager:
 
     def __init__(
         self,
-        on_progress: Optional[Callable[[str, float], None]] = None,
-        on_complete: Optional[Callable[[], None]] = None,
+        on_progress: Callable[[str, float], None] | None = None,
+        on_complete: Callable[[], None] | None = None,
     ):
         self._tasks: dict = {}
         self._on_progress = on_progress

@@ -1,10 +1,8 @@
 """Icon loading and caching utilities for envoy_despatch."""
 
 import os
-from typing import Optional
 
 from PySide6.QtGui import QIcon, QPixmap
-
 
 # Cache directory relative to this module's resources folder
 _RESOURCES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources")
@@ -51,7 +49,7 @@ def load_icon(name: str) -> QIcon:
     return icon
 
 
-def load_pixmap(name: str) -> Optional[QPixmap]:
+def load_pixmap(name: str) -> QPixmap | None:
     """Load a pixmap by name from the resources/icons directory.
 
     Args:

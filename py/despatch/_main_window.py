@@ -1,9 +1,7 @@
 """Main application window for envoy_despatch."""
 
-from typing import Optional
 
-from . import _qt
-from . import _session, _config, _icons, _constants, _app_store, _stack
+from . import _app_store, _constants, _icons, _qt, _session, _stack
 
 QtWidgets = _qt.QtWidgets
 QtCore = _qt.QtCore
@@ -31,7 +29,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _setupUi(self) -> None:
         """Initialize the user interface components."""
         self.setWindowTitle(
-            "{} [{}]".format(_constants.PRODUCT_NAME, self._session.stack_type.display_name)
+            f"{_constants.PRODUCT_NAME} [{self._session.stack_type.display_name}]"
         )
         self.setMinimumSize(_constants.DEFAULT_WINDOW_WIDTH, _constants.DEFAULT_WINDOW_HEIGHT)
         self.resize(800, 600)
@@ -96,7 +94,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Refresh the UI with current session state."""
         # Update window title
         stack_name = self._session.stack_type.display_name
-        self.setWindowTitle("{} [{}]".format(_constants.PRODUCT_NAME, stack_name))
+        self.setWindowTitle(f"{_constants.PRODUCT_NAME} [{stack_name}]")
 
         # Populate stack combobox
         self._stack_combo.clear()

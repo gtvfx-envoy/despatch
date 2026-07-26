@@ -3,7 +3,6 @@
 import os
 import subprocess
 import sys
-from typing import Optional, Dict, List
 
 
 class Process:
@@ -24,9 +23,9 @@ class Process:
     def __init__(
         self,
         command: str,
-        args: Optional[list] = None,
+        args: list | None = None,
         label: str = "",
-        working_dir: Optional[str] = None,
+        working_dir: str | None = None,
         in_terminal: bool = False,
     ):
         self._command = command
@@ -34,8 +33,8 @@ class Process:
         self._label = label or command
         self._working_dir = working_dir or os.getcwd()
         self._in_terminal = in_terminal
-        self._process: Optional[subprocess.Popen] = None
-        self._exit_code: Optional[int] = None
+        self._process: subprocess.Popen | None = None
+        self._exit_code: int | None = None
         self._running = False
         self._stdout: str = ""
         self._stderr: str = ""
@@ -53,7 +52,7 @@ class Process:
         return self._process.poll() is None
 
     @property
-    def exit_code(self) -> Optional[int]:
+    def exit_code(self) -> int | None:
         """Exit code of the process, or None if still running."""
         if self._process is not None and self._exit_code is None:
             self._exit_code = self._process.poll()
@@ -85,7 +84,7 @@ class Process:
                     )
             except (AttributeError, UnicodeDecodeError):
                 pass
-        return "{}\n{}".format(self._stdout, self._stderr)
+        return f"{self._stdout}\n{self._stderr}"
 
     @property
     def has_errors(self) -> bool:
@@ -164,7 +163,7 @@ class Process:
         except OSError:
             return False
 
-    def wait(self, timeout: Optional[float] = None) -> Optional[int]:
+    def wait(self, timeout: float | None = None) -> int | None:
         """Wait for the process to exit.
 
         Args:
@@ -185,11 +184,11 @@ class Process:
             return None
 
     def __repr__(self) -> str:
-        status = "running" if self.is_running else "exited({})".format(self.exit_code)
-        return "{}(label={!r}, {})".format(self.__class__.__name__, self._label, status)
+        status = "running" if self.is_running else f"exited({self.exit_code})"
+        return f"{self.__class__.__name__}(label={self._label!r}, {status})"
 
 
-def launch_in_terminal(command: str, args: Optional[list] = None) -> bool:
+def launch_in_terminal(command: str, args: list | None = None) -> bool:
     """Launch a command in a new terminal window.
 
     Cross-platform helper for opening applications in dedicated terminal windows.

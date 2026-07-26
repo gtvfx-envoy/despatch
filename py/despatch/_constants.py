@@ -3,7 +3,7 @@
 import os
 
 # Product identity
-PRODUCT_NAME = "envoy_despatch"
+PRODUCT_NAME = "despatch"
 PRODUCT_VERSION = "0.1.0"
 PRODUCT_DESCRIPTION = "System tray launcher for the envoy runtime"
 
@@ -27,9 +27,9 @@ TIME_MACHINE_EXPIRATION_SECONDS = 86400
 
 # Cache directory for despatch data
 if "APPDATA" in os.environ:
-    DEFAULT_DATA_DIR = os.path.join(os.environ["APPDATA"], "envoy_despatch")
+    DEFAULT_DATA_DIR = os.path.join(os.environ["APPDATA"], "despatch")
 else:
-    DEFAULT_DATA_DIR = os.path.join(os.path.expanduser("~"), ".envoy_despatch")
+    DEFAULT_DATA_DIR = os.path.join(os.path.expanduser("~"), ".despatch")
 
 DEFAULT_CONFIG_PATH = os.path.join(DEFAULT_DATA_DIR, "config.json")
 DEFAULT_LOG_DIR = os.path.join(DEFAULT_DATA_DIR, "logs")

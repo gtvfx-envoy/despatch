@@ -1,10 +1,8 @@
 """System tray icon and context menu for envoy_despatch."""
 
 import datetime
-from typing import Optional
 
-from . import _qt
-from . import _session, _config, _icons, _constants, _app_store
+from . import _app_store, _constants, _icons, _qt, _session
 
 QtWidgets = _qt.QtWidgets
 QtCore = _qt.QtCore
@@ -25,7 +23,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._session = _session.getSession()
-        self.setIcon(_icons.loadIcon(_constants.ICON_STATES["default"]))
+        self.setIcon(_icons.load_icon(_constants.ICON_STATES["default"]))
         self.activated.connect(self._onActivated)
 
     def rebuildContextMenu(self) -> None:
@@ -41,7 +39,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
         self._stack_menu = context_menu.addMenu(
             self._session.stack_type.display_name
         )
-        self._stack_menu.setIcon(_icons.loadIcon("default"))
+        self._stack_menu.setIcon(_icons.load_icon("default"))
         self._stack_menu.aboutToShow.connect(self._populateStackMenu)
 
         # Show menu action
@@ -106,7 +104,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
 
         for stack in fav_stacks:
             action = self._stack_menu.addAction(
-                "{} {}".format(_icons.HEART_ICON, stack.name)
+                f"{_icons.HEART_ICON} {stack.name}"
             )
             action.triggered.connect(
                 session.setStack(stack.name, explicit=False)
@@ -130,7 +128,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
                 if stack.name != current_stack:
                     action = self._stack_menu.addAction(stack.name)
                     if stack.is_inactive:
-                        action.setText("{} {}".format(_icons.PADLOCK_ICON, stack.name))
+                        action.setText(f"{_icons.PADLOCK_ICON} {stack.name}")
                     action.triggered.connect(
                         session.setStack(stack.name, explicit=False)
                     )
@@ -146,7 +144,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
         self.setIcon(_icons.loadIcon(icon_path))
         self.updateTooltip(state)
 
-    def updateTooltip(self, state: Optional[str] = None) -> None:
+    def updateTooltip(self, state: str | None = None) -> None:
         """Update the tray icon tooltip.
 
         Args:
@@ -168,7 +166,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
             )
         else:
             stack_name = session.stack_type.display_name
-            tooltip = "{} [{}]".format(_constants.PRODUCT_NAME, stack_name)
+            tooltip = f"{_constants.PRODUCT_NAME} [{stack_name}]"
 
         self.setToolTip(tooltip)
 
@@ -180,15 +178,11 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
     def _showAbout(self) -> None:
         """Show the about dialog."""
         msg = (
-            "<b>{}</b><br/>"
-            "Version: {}<br/>"
-            "{}"
-        ).format(
-            _constants.PRODUCT_NAME,
-            _constants.PRODUCT_VERSION,
-            self._session.stack_type.display_name,
+            f"<b>{_constants.PRODUCT_NAME}</b><br/>"
+            f"Version: {_constants.PRODUCT_VERSION}<br/>"
+            f"{self._session.stack_type.display_name}"
         )
-        QtWidgets.QMessageBox.about(self, "About {}".format(_constants.PRODUCT_NAME), msg)
+        QtWidgets.QMessageBox.about(self, f"About {_constants.PRODUCT_NAME}", msg)
 
 
 # Icon constants for UI elements

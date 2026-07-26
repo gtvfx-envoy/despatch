@@ -1,10 +1,8 @@
 """Search panel UI for envoy_despatch."""
 
 import re
-from typing import List, Optional, Callable
 
-from . import _qt
-from . import _app_store
+from . import _app_store, _qt
 
 QtWidgets = _qt.QtWidgets
 QtCore = _qt.QtCore
@@ -30,7 +28,7 @@ class SearchPanel(QtWidgets.QWidget):
         self.setWindowTitle("envoy_despatch — Search")
         self.setMinimumSize(500, 400)
 
-        self._app_store: Optional[_app_store.ApplicationStore] = None
+        self._app_store: _app_store.ApplicationStore | None = None
         self._setupUi()
         self._connectSignals()
 
@@ -61,7 +59,6 @@ class SearchPanel(QtWidgets.QWidget):
 
     def _connectSignals(self) -> None:
         """Wire up signal/slot connections."""
-        pass
 
     def setAppStore(self, store: _app_store.ApplicationStore) -> None:
         """Set the application store to search against.
@@ -94,8 +91,7 @@ class SearchPanel(QtWidgets.QWidget):
         for entry in entries:
             item_text = entry.name
             if entry.description:
-                item_text += " — {}".format(entry.description)
-            icon_name = entry.icon or ""
+                item_text += f" — {entry.description}"
             item = QtWidgets.QListWidgetItem(item_text)
             item.setData(QtCore.Qt.UserRole, entry.command)
             self._results_list.addItem(item)
@@ -123,7 +119,7 @@ class SearchPanel(QtWidgets.QWidget):
 
         self.setSearchResults(entries)
 
-    def _fuzzySearch(self, query: str) -> List[_app_store.ApplicationEntry]:
+    def _fuzzySearch(self, query: str) -> list[_app_store.ApplicationEntry]:
         """Perform fuzzy search on application entries.
 
         Implements a simple fuzzy matching algorithm that ranks results by
@@ -197,7 +193,7 @@ class SearchPanel(QtWidgets.QWidget):
 
     def _onCurrentRowChanged(self, current_row: int) -> None:
         """Handle current row change for keyboard navigation feedback."""
-        pass  # Could add visual feedback here
+        # Could add visual feedback here
 
     def focusSearch(self) -> None:
         """Set keyboard focus to the search input."""

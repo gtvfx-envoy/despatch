@@ -1,9 +1,7 @@
 """Features browser for envoy_despatch development feature management."""
 
-from typing import List, Optional
 
-from . import _qt
-from . import _session, _config, _icons, _constants
+from . import _qt, _session
 
 QtWidgets = _qt.QtWidgets
 QtCore = _qt.QtCore
@@ -25,7 +23,7 @@ class FeatureEntry:
         self,
         name: str,
         description: str = "",
-        packages: Optional[List[str]] = None,
+        packages: list[str] | None = None,
         active: bool = False,
     ):
         self.name = name
@@ -114,10 +112,10 @@ class FeaturesBrowserDialog(QtWidgets.QDialog):
             ),
         )
 
-    def _onItemChanged(self, current: Optional[QtWidgets.QListWidgetItem], previous) -> None:
+    def _onItemChanged(self, current: QtWidgets.QListWidgetItem | None, previous) -> None:
         """Handle list item selection change to show feature details."""
         if current:
-            feature_name = current.text()
+            current.text()
             # In a full implementation, load and display feature details
             self._details_label.setText(
                 "Select a feature to view its details.\n\n"

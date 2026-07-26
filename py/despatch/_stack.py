@@ -1,6 +1,5 @@
 """Stack type abstraction for envoy_despatch."""
 
-from typing import List, Optional
 
 
 class StackType:
@@ -23,7 +22,7 @@ class StackType:
         is_inactive: bool = False,
         icon: str = "default.svg",
         notice: str = "",
-        path: Optional[str] = None,
+        path: str | None = None,
     ):
         self._name = name
         self._group = group or ""
@@ -66,18 +65,16 @@ class StackType:
     def display_name(self) -> str:
         """Formatted display name with inactive indicator."""
         prefix = "\U0001F512 " if self._is_inactive else ""
-        return "{}{}".format(prefix, self._name)
+        return f"{prefix}{self._name}"
 
     def __repr__(self) -> str:
-        return "{}(name={!r}, group={!r})".format(
-            self.__class__.__name__, self._name, self._group
-        )
+        return f"{self.__class__.__name__}(name={self._name!r}, group={self._group!r})"
 
 
 class ProductionStack(StackType):
     """Stack representing a live production environment."""
 
-    def __init__(self, name: str = "Production", path: Optional[str] = None):
+    def __init__(self, name: str = "Production", path: str | None = None):
         super().__init__(
             name=name,
             icon="production.svg",
@@ -89,7 +86,7 @@ class ProductionStack(StackType):
 class DeveloperStack(StackType):
     """Stack representing a developer/test environment."""
 
-    def __init__(self, name: str = "Developer", path: Optional[str] = None):
+    def __init__(self, name: str = "Developer", path: str | None = None):
         super().__init__(
             name=name,
             icon="developer.svg",
@@ -117,10 +114,10 @@ class InvalidStack(StackType):
 
 
 def getStackType(
-    stackName: Optional[str] = None,
+    stackName: str | None = None,
     group: str = "",
     is_inactive: bool = False,
-    path: Optional[str] = None,
+    path: str | None = None,
 ) -> StackType:
     """Determine the appropriate stack type based on context.
 

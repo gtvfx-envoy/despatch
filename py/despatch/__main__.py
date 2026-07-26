@@ -46,9 +46,7 @@ def _setup_app():
         The QApplication instance.
 
     """
-    from . import _qt
-    from . import __version__
-    from . import _icons, _log
+    from . import __version__, _icons, _log, _qt
 
     QtWidgets = _qt.QtWidgets
     log = _log.get_logger(__name__)
@@ -82,12 +80,12 @@ def _setup_app():
 
 def main():
     """Main entry point for envoy_despatch."""
-    from . import _log, _session, _tray_icon, _config
+    from . import _config, _log, _session, _tray_icon
 
     args = _parse_args()
 
     # Configure logging
-    _log.setup_logging(level=args.log_level, log_directory=args.log_directory)
+    _log.setupLogging(level=args.log_level, log_directory=args.log_directory)
     log = _log.get_logger(__name__)
 
     log.info("Starting envoy_despatch")
@@ -104,21 +102,21 @@ def main():
         config = _config.Config()
     
     session = _session.Session(config=config)
-    _session.Session.set_instance(session)
+    _session.Session.setInstance(session)
     log.debug("Session initialized")
 
     # Create and show tray icon
     tray_icon = _tray_icon.DespatchTrayIcon()
     session.tray_icon = tray_icon  # Store reference in session
-    tray_icon.rebuild_context_menu()
+    tray_icon.rebuildContextMenu()
     tray_icon.show()  # Explicitly show the tray icon
     log.info("Tray icon shown")
 
     # Show popup window if requested
     if args.popup:
-        session.popup_main_window()
+        session.popupMainWindow()
 
-    sys.exit(app.exec())
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":

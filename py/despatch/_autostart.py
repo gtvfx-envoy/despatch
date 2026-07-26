@@ -2,11 +2,9 @@
 
 import os
 import sys
-from pathlib import Path
-from typing import Optional
 
 
-def get_autostart_path() -> Optional[str]:
+def get_autostart_path() -> str | None:
     """Return the platform-specific autostart directory path.
 
     Returns:
@@ -71,7 +69,7 @@ def enable_autostart() -> bool:
             with open(bat_path, "w") as f:
                 f.write("@echo off\npython -m despatch\n")
             return True
-        except IOError:
+        except OSError:
             return False
 
     elif sys.platform == "darwin":
@@ -79,8 +77,8 @@ def enable_autostart() -> bool:
         entry = os.path.join(autostart_dir, "io.envoy.despatch.plist")
         try:
             python_path = sys.executable
-            script_path = os.path.join(os.path.dirname(__file__), "..", "__main__.py")
-            plist_content = """<?xml version="1.0" encoding="UTF-8"?>
+            os.path.join(os.path.dirname(__file__), "..", "__main__.py")
+            plist_content = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -91,15 +89,18 @@ def enable_autostart() -> bool:
         <string>{python_path}</string>
         <string>-m</string>
         <string>despatch</string>
+        <string>--dev</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
+    <key>KeepAlive</key>
+    <false/>
 </dict>
-</plist>""".format(python_path=python_path)
+</plist>"""
             with open(entry, "w") as f:
                 f.write(plist_content)
             return True
-        except IOError:
+        except OSError:
             return False
 
     else:
@@ -115,7 +116,7 @@ def enable_autostart() -> bool:
                 f.write("Hidden=false\n")
                 f.write("NoDisplay=false\n")
             return True
-        except IOError:
+        except OSError:
             return False
 
 

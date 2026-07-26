@@ -2,8 +2,7 @@
 
 import json
 import os
-from typing import Any, Dict, List, Optional
-
+from typing import Any
 
 DEFAULT_CONFIG_DIR = os.path.join(
     os.environ.get("APPDATA", os.path.expanduser("~")),
@@ -12,7 +11,7 @@ DEFAULT_CONFIG_DIR = os.path.join(
 DEFAULT_CONFIG_PATH = os.path.join(DEFAULT_CONFIG_DIR, "config.json")
 
 # Default configuration values
-_DEFAULTS: Dict[str, Any] = {
+_DEFAULTS: dict[str, Any] = {
     "favorites": {},  # {app_name: bool}
     "favorite_stacks": [],  # list of stack names
     "active_stack": None,
@@ -34,15 +33,15 @@ class Config:
 
     """
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         self._config_path = config_path or DEFAULT_CONFIG_PATH
-        self._data: Dict[str, Any] = {}
+        self._data: dict[str, Any] = {}
         self._load()
 
     # --- Favorites ---
 
     @property
-    def favorites(self) -> Dict[str, bool]:
+    def favorites(self) -> dict[str, bool]:
         """Dictionary mapping application names to favorite status.
 
         Returns:
@@ -52,7 +51,7 @@ class Config:
         return self._data.get("favorites", {})
 
     @favorites.setter
-    def favorites(self, value: Dict[str, bool]) -> None:
+    def favorites(self, value: dict[str, bool]) -> None:
         self._data["favorites"] = value
         self.save()
 
@@ -86,7 +85,7 @@ class Config:
     # --- Favorite stacks ---
 
     @property
-    def favorite_stacks(self) -> List[str]:
+    def favorite_stacks(self) -> list[str]:
         """List of favorited stack names.
 
         Returns:
@@ -96,7 +95,7 @@ class Config:
         return self._data.get("favorite_stacks", [])
 
     @favorite_stacks.setter
-    def favorite_stacks(self, value: List[str]) -> None:
+    def favorite_stacks(self, value: list[str]) -> None:
         self._data["favorite_stacks"] = value
         self.save()
 
@@ -123,7 +122,7 @@ class Config:
     # --- Active stack ---
 
     @property
-    def active_stack(self) -> Optional[str]:
+    def active_stack(self) -> str | None:
         """Name of the currently active stack.
 
         Returns:
@@ -133,7 +132,7 @@ class Config:
         return self._data.get("active_stack")
 
     @active_stack.setter
-    def active_stack(self, value: Optional[str]) -> None:
+    def active_stack(self, value: str | None) -> None:
         self._data["active_stack"] = value
         self.save()
 
@@ -191,7 +190,7 @@ class Config:
     # --- Time Machine ---
 
     @property
-    def time_machine_expiration(self) -> Optional[str]:
+    def time_machine_expiration(self) -> str | None:
         """ISO timestamp when Time Machine expiration occurs.
 
         Returns:
@@ -201,14 +200,14 @@ class Config:
         return self._data.get("time_machine_expiration")
 
     @time_machine_expiration.setter
-    def time_machine_expiration(self, value: Optional[str]) -> None:
+    def time_machine_expiration(self, value: str | None) -> None:
         self._data["time_machine_expiration"] = value
         self.save()
 
     # --- Custom stacks ---
 
     @property
-    def recent_custom_stacks(self) -> List[str]:
+    def recent_custom_stacks(self) -> list[str]:
         """List of recently used custom stack file paths.
 
         Returns:
@@ -218,7 +217,7 @@ class Config:
         return self._data.get("recent_custom_stacks", [])
 
     @recent_custom_stacks.setter
-    def recent_custom_stacks(self, value: List[str]) -> None:
+    def recent_custom_stacks(self, value: list[str]) -> None:
         self._data["recent_custom_stacks"] = value
         self.save()
 
@@ -244,7 +243,7 @@ class Config:
                 with open(self._config_path, "r") as f:
                     loaded = json.load(f)
                 self._data = {**_DEFAULTS, **loaded}
-            except (json.JSONDecodeError, IOError):
+            except (OSError, json.JSONDecodeError):
                 self._data = dict(_DEFAULTS)
 
     def save(self) -> None:

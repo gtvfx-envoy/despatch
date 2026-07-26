@@ -1,9 +1,9 @@
 """Central session orchestrator for envoy_despatch."""
 
 import datetime
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
-from . import _app_store, _config, _stack, _process
+from . import _app_store, _config, _process, _stack
 
 
 class Session:
@@ -20,13 +20,13 @@ class Session:
 
     _instance: Optional["Session"] = None
 
-    def __init__(self, config: Optional[_config.Config] = None):
+    def __init__(self, config: _config.Config | None = None):
         self._config = config or _config.Config()
         self._app_store = _app_store.ApplicationStore()
         self._stack_type: _stack.StackType = _stack.getStackType(
             self._config.active_stack
         )
-        self._active_processes: Dict[str, _process.Process] = {}
+        self._active_processes: dict[str, _process.Process] = {}
         self._main_window = None
         self._tray_icon = None  # Will be set by __main__.py after creation
 
@@ -81,12 +81,12 @@ class Session:
         return self._stack_type
 
     @property
-    def active_stack_name(self) -> Optional[str]:
+    def active_stack_name(self) -> str | None:
         """Name of the currently active stack."""
         return self._config.active_stack
 
     @property
-    def all_stacks(self) -> List[_stack.StackType]:
+    def all_stacks(self) -> list[_stack.StackType]:
         """List all available stacks.
 
         Returns:
@@ -107,7 +107,7 @@ class Session:
         return False  # Placeholder - would track cache manager state
 
     @property
-    def time_machine_expiration(self) -> Optional[datetime.datetime]:
+    def time_machine_expiration(self) -> datetime.datetime | None:
         """Get the Time Machine expiration datetime.
 
         Returns:
@@ -134,10 +134,10 @@ class Session:
     def launch(
         self,
         command: str,
-        args: Optional[list] = None,
+        args: list | None = None,
         label: str = "",
         in_terminal: bool = False,
-    ) -> Optional[_process.Process]:
+    ) -> _process.Process | None:
         """Launch an application.
 
         Args:
@@ -168,7 +168,6 @@ class Session:
         """Refresh the application store and stack state."""
         # In a full implementation, this would re-discover stacks and apps
         # from the envoy backend. For now, it's a no-op placeholder.
-        pass
 
     def restart(self) -> None:
         """Restart the session (refresh + reload)."""
@@ -192,7 +191,7 @@ class Session:
             expiration_dt = datetime.datetime.fromisoformat(
                 self._config.time_machine_expiration
             )
-            if expiration_dt > datetime.datetime.now() and self._tray_icon:
+            if expiration_dt > datetime.datetime.now(datetime.UTC) and self._tray_icon:
                 self._tray_icon.setIconState("checkpoint")
 
     def quit(self) -> None:
@@ -202,14 +201,14 @@ class Session:
                 proc.terminate()
         self._active_processes.clear()
 
-    def groupedStacks(self) -> List[tuple]:
+    def groupedStacks(self) -> list[tuple]:
         """Get stacks grouped by their group attribute.
 
         Returns:
             List of (group_name, [stacks]) tuples.
 
         """
-        groups: Dict[str, List[_stack.StackType]] = {}
+        groups: dict[str, list[_stack.StackType]] = {}
         for stack in self.all_stacks:
             group = stack.group or "Uncategorized"
             if group not in groups:
@@ -219,10 +218,10 @@ class Session:
         return sorted(groups.items(), key=lambda x: x[0])
 
     def __repr__(self) -> str:
-        return "Session(stack={!r})".format(self.active_stack_name)
+        return f"Session(stack={self.active_stack_name!r})"
 
 
-def getSession() -> Optional[Session]:
+def getSession() -> Session | None:
     """Return the global session instance.
 
     Returns:
