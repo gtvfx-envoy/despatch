@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "envoy-despatch"
+version = "0.1.0"
+description = "System tray GUI frontend for the envoy runtime"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+authors = [
+    { name = "GTVFX Contrib", email = "dev@gtvfx-contrib.github.io" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Desktop Environment",
+]
+
+[project.scripts]
+despatch = "despatch.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["py"]
+include = ["despatch*"]
+
+[tool.setuptools.package-data]
+"despatch.resources" = ["**/*"]
