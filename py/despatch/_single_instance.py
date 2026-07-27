@@ -38,7 +38,7 @@ class SingleInstance(QtCore.QObject):
 
         """
         socket = QtNetwork.QLocalSocket(self)
-        socket.connectToServer(self._server_name, QtCore.QIODevice.ReadWrite) # type: ignore
+        socket.connectToServer(self._server_name, QtCore.QIODevice.ReadWrite)  # type: ignore
         if socket.waitForConnected(250):
             socket.write(b"show\n")
             socket.flush()
@@ -80,7 +80,7 @@ class SingleInstance(QtCore.QObject):
     def _readSocket(self, socket: QtNetwork.QLocalSocket) -> None:
         """Accumulate and handle newline-delimited IPC messages."""
         previous_data = socket.property("despatchBuffer") or b""
-        buffered_data = bytes(previous_data) + bytes(socket.readAll()) # type: ignore
+        buffered_data = bytes(previous_data) + bytes(socket.readAll())  # type: ignore
         socket.setProperty("despatchBuffer", buffered_data)
         if b"\n" not in buffered_data:
             return

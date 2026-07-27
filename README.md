@@ -57,6 +57,28 @@ envoy python -m build
 Do not substitute a system `python` or `pip`; it will not contain the assembled
 runtime used by Despatch.
 
+## Standalone executable
+
+Build the Windows executable locally from an Envoy environment containing
+Python, Qt.py, PySide6, and the Envoy Python API:
+
+```powershell
+.\scripts\build-executable.ps1
+```
+
+The script installs its pinned PyInstaller build tool under the ignored
+`build/` directory when necessary. It writes the one-file, windowed executable
+to `dist/despatch.exe`. Pass `-SkipToolInstall` to require PyInstaller to be
+available already, or `-PythonExecutable <path>` to build with an explicitly
+prepared Python 3.11 environment instead of `envoy python`. `-Console` creates
+a temporary console-enabled build when diagnosing packaged startup failures.
+
+The `Build & Release` GitHub Actions workflow runs the same script on Windows.
+Manual runs retain the executable as a workflow artifact; tags matching `v*`
+also attach `despatch.exe` to the corresponding GitHub Release. The workflow
+pins the Envoy release embedded into the executable and exposes an override for
+manual compatibility builds.
+
 ## Application manifests
 
 Bundles opt into the GUI by adding `.envoy/despatch.json`. Unlisted Envoy

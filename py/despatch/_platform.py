@@ -76,8 +76,12 @@ class AutostartService:
         self._script_path.parent.mkdir(parents=True, exist_ok=True)
         self._script_path.write_text(script_content, encoding="utf-8")
         registry_command = subprocess.list2cmdline(
-            [str(Path(os.environ.get("WINDIR", "C:\\Windows")) / "System32" / "wscript.exe"),
-             "//B", "//Nologo", str(self._script_path)]
+            [
+                str(Path(os.environ.get("WINDIR", "C:\\Windows")) / "System32" / "wscript.exe"),
+                "//B",
+                "//Nologo",
+                str(self._script_path),
+            ]
         )
         with winreg.CreateKey(winreg.HKEY_CURRENT_USER, self._registryPath()) as registry_key:
             winreg.SetValueEx(

@@ -80,9 +80,7 @@ result = someFunction(arg1, arg2, arg3)
 button.clicked.connect(self.someMethodName)
 
 # Only break when approaching/exceeding 100 characters
-result = someFunction(
-    arg1, arg2, arg3, arg4, arg5, arg6, arg7
-)
+result = someFunction(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
 ```
 
 ## Docstring Standards
@@ -97,6 +95,7 @@ https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
 def simpleFunction(self):
     """Brief description of the function."""
     return "result"
+
 
 # Multi-line docstring - empty line required at end
 def myFunction(arg1: str, arg2: int) -> str:

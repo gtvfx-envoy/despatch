@@ -205,13 +205,7 @@ class EnvoyGateway:
             result_path = Path(temporary_directory) / "result.json"
             request_path.write_text(json.dumps(request), encoding="utf-8")
             completed_process = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "despatch._launch_worker",
-                    str(request_path),
-                    str(result_path),
-                ],
+                self._launchWorkerCommand(request_path, result_path),
                 check=False,
                 creationflags=creation_flags,
             )
@@ -223,6 +217,19 @@ class EnvoyGateway:
         if not isinstance(process_id, int):
             raise RuntimeError("Envoy launch worker returned an invalid process id")
         return process_id
+
+    @staticmethod
+    def _launchWorkerCommand(request_path: Path, result_path: Path) -> list[str]:
+        """Build the isolated worker command for source or frozen execution."""
+        worker_arguments = [str(request_path), str(result_path)]
+        if getattr(sys, "frozen", False):
+            return [sys.executable, "--launch-worker", *worker_arguments]
+        return [
+            sys.executable,
+            "-m",
+            "despatch._launch_worker",
+            *worker_arguments,
+        ]
 
     @staticmethod
     def _readLaunchResult(result_path: Path) -> dict[str, Any]:

@@ -7,7 +7,15 @@ import sys
 
 from Qt import QtCore, QtWidgets
 
-from . import __version__, _application, _constants, _icons, _log, _single_instance
+from . import (
+    __version__,
+    _application,
+    _constants,
+    _icons,
+    _launch_worker,
+    _log,
+    _single_instance,
+)
 
 
 def _parseArgs(arguments: list[str] | None = None) -> argparse.Namespace:
@@ -24,6 +32,12 @@ def _parseArgs(arguments: list[str] | None = None) -> argparse.Namespace:
         default="ERROR",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         help="Console and file logging threshold",
+    )
+    parser.add_argument(
+        "--launch-worker",
+        nargs=2,
+        metavar=("REQUEST_PATH", "RESULT_PATH"),
+        help=argparse.SUPPRESS,
     )
     parser.add_argument("--version", action="version", version=__version__)
     return parser.parse_args(arguments)
@@ -46,8 +60,10 @@ def _createApplication() -> QtWidgets.QApplication:
 
 
 def main(arguments: list[str] | None = None) -> int:
-    """Run Despatch inside the Envoy-provided Python and Qt environment."""
+    """Run Despatch or its internal packaged launch worker."""
     args = _parseArgs(arguments)
+    if args.launch_worker is not None:
+        return _launch_worker.main(args.launch_worker)
     _log.setupLogging(args.log_level, args.log_directory)
     application = _createApplication()
     single_instance = _single_instance.SingleInstance()

@@ -50,6 +50,9 @@ def _findResourceIcon(icon_name: str) -> Path | None:
     repository_path = Path(__file__).resolve().parents[2] / "resources" / "icons" / icon_name
     if repository_path.is_file():
         return repository_path
+    packaged_path = Path(__file__).resolve().parent / "resources" / "icons" / icon_name
+    if packaged_path.is_file():
+        return packaged_path
     try:
         icon_resource = resources.files("despatch.resources").joinpath("icons", icon_name)
     except (ModuleNotFoundError, TypeError):

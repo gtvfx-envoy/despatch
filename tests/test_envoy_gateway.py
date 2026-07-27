@@ -283,3 +283,19 @@ def testGatewayUsesIsolatedLaunchWorker(tmp_path, monkeypatch):
         "stackPath": str(envoy_module.stack_path.resolve()),
     }
     assert invocation["options"]["check"] is False
+
+
+def testFrozenGatewayUsesExecutableLaunchWorker(tmp_path, monkeypatch):
+    monkeypatch.setattr(_envoy_gateway.sys, "frozen", True, raising=False)
+
+    command_line = _envoy_gateway.EnvoyGateway._launchWorkerCommand(
+        tmp_path / "request.json",
+        tmp_path / "result.json",
+    )
+
+    assert command_line == [
+        _envoy_gateway.sys.executable,
+        "--launch-worker",
+        str(tmp_path / "request.json"),
+        str(tmp_path / "result.json"),
+    ]
