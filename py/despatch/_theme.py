@@ -89,7 +89,7 @@ def _baseStyle(
     QWidget {{
         color: {text};
         font-family: "Segoe UI", "Inter", sans-serif;
-        font-size: 13px;
+        font-size: 10pt;
     }}
     QMainWindow, QDialog {{ background: transparent; }}
     QFrame#windowShell, QFrame#dialogShell {{
@@ -97,8 +97,8 @@ def _baseStyle(
         border: 1px solid {border};
         border-radius: 16px;
     }}
-    QLabel#productTitle {{ font-size: 15px; font-weight: 600; }}
-    QLabel#sectionHeader {{ color: {muted}; font-size: 11px; font-weight: 600; }}
+    QLabel#productTitle {{ font-size: 11pt; font-weight: 600; }}
+    QLabel#sectionHeader {{ color: {muted}; font-size: 8pt; font-weight: 600; }}
     QLabel#mutedLabel {{ color: {muted}; }}
     QLabel#errorLabel {{ color: {danger}; }}
     QLineEdit, QComboBox {{

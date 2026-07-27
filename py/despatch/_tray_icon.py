@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from Qt import QtCore, QtWidgets
 
-from . import _constants, _icons, _models
+from . import _constants
+from . import _icons
+from . import _models
 
 
 def _activationReason(reason_name: str):

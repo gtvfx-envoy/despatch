@@ -6,8 +6,8 @@ from Qt import QtCore, QtGui, QtWidgets
 
 from . import _constants, _icons, _models, _search
 
-_APPLICATION_ROLE = QtCore.Qt.UserRole
-_SECTION_ROLE = QtCore.Qt.UserRole + 1
+_APPLICATION_ROLE = QtCore.Qt.UserRole # type: ignore
+_SECTION_ROLE = QtCore.Qt.UserRole + 1 # type: ignore
 
 
 def _globalPoint(event) -> QtCore.QPoint:
@@ -57,7 +57,7 @@ class TitleBar(QtWidgets.QWidget):
 
     def mousePressEvent(self, event) -> None:
         """Begin a window drag from the custom title bar."""
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == QtCore.Qt.LeftButton:  # type: ignore
             window_handle = self.window().windowHandle()
             if (
                 window_handle is not None
@@ -73,7 +73,7 @@ class TitleBar(QtWidgets.QWidget):
 
     def mouseMoveEvent(self, event) -> None:
         """Move the window during a fallback title-bar drag."""
-        if self._drag_offset is not None and event.buttons() & QtCore.Qt.LeftButton:
+        if self._drag_offset is not None and event.buttons() & QtCore.Qt.LeftButton:  # type: ignore
             self.window().move(_globalPoint(event) - self._drag_offset)
             event.accept()
             return
@@ -104,9 +104,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._allow_close = False
         self._populating_configurations = False
 
-        window_flags = QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint
+        window_flags = QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint # type: ignore
         self.setWindowFlags(window_flags)
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True) # type: ignore
         self.setWindowTitle(_constants.PRODUCT_NAME)
         self.setWindowIcon(_icons.loadProductIcon())
         self.setMinimumSize(
@@ -174,7 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
         content_layout.addWidget(self._status_label)
 
         self._application_list = QtWidgets.QListWidget()
-        self._application_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self._application_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu) # type: ignore
         self._application_list.setIconSize(QtCore.QSize(34, 34))
         self._application_list.setSpacing(2)
         self._application_list.setUniformItemSizes(False)
@@ -279,7 +279,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def focusSearch(self) -> None:
         """Focus and select the search field."""
-        self._search_input.setFocus(QtCore.Qt.ShortcutFocusReason)
+        self._search_input.setFocus(QtCore.Qt.ShortcutFocusReason) # type: ignore
         self._search_input.selectAll()
 
     def allowClose(self) -> None:
@@ -367,11 +367,11 @@ class MainWindow(QtWidgets.QMainWindow):
         """Append a non-interactive section label."""
         item = QtWidgets.QListWidgetItem(section_name.upper())
         item.setData(_SECTION_ROLE, True)
-        item.setFlags(QtCore.Qt.NoItemFlags)
+        item.setFlags(QtCore.Qt.NoItemFlags) # type: ignore
         item.setSizeHint(QtCore.QSize(0, 28))
         font = item.font()
-        font.setPixelSize(11)
-        font.setWeight(QtGui.QFont.DemiBold)
+        font.setPointSizeF(8.0)
+        font.setWeight(QtGui.QFont.DemiBold) # type: ignore
         item.setFont(font)
         self._application_list.addItem(item)
 
@@ -389,8 +389,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def _addEmptyItem(self, message: str) -> None:
         """Append a centered non-interactive empty-state row."""
         item = QtWidgets.QListWidgetItem(message)
-        item.setFlags(QtCore.Qt.NoItemFlags)
-        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        item.setFlags(QtCore.Qt.NoItemFlags) # type: ignore
+        item.setTextAlignment(QtCore.Qt.AlignCenter) # type: ignore
         item.setSizeHint(QtCore.QSize(0, 90))
         self._application_list.addItem(item)
 

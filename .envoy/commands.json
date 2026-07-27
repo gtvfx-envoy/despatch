@@ -3,10 +3,6 @@
         "environment": [
             "python"
         ],
-        "alias": [
-            "pythonw",
-            "-m",
-            "despatch"
-        ]
+        "alias": ["pythonw", "-m", "despatch"]
     }
 }

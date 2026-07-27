@@ -2,9 +2,9 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from Qt import QtCore, QtGui
+from Qt import QtCore, QtGui, QtWidgets
 
-from despatch import _icons, _platform, _single_instance
+from despatch import _icons, _platform, _single_instance, _theme
 
 
 def testProductIconUsesRepositoryResources(qapp):
@@ -43,6 +43,19 @@ def testEmbeddedSvgImageProducesSquareIcon(qapp, tmp_path):
     assert not icon.isNull()
     assert available_sizes
     assert available_sizes[0].width() == available_sizes[0].height()
+
+
+def testThemeKeepsNativeMenuFontPointSized(qapp):
+    previous_stylesheet = qapp.styleSheet()
+    try:
+        _theme.applyTheme(qapp, "dark")
+        menu = QtWidgets.QMenu()
+        menu.ensurePolished()
+
+        assert menu.font().pointSizeF() > 0
+        assert menu.font().pixelSize() < 0
+    finally:
+        qapp.setStyleSheet(previous_stylesheet)
 
 
 def testGlobalShortcutOwnsQtSignal(qapp):
