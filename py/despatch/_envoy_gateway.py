@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -18,12 +19,12 @@ class EnvoyUnavailableError(RuntimeError):
     """Raised when the Envoy Python API cannot be loaded or queried."""
 
 
-class ConfigurationSwitchError(RuntimeError):
-    """Raised when a named Envoy configuration cannot be activated."""
+class StackSwitchError(RuntimeError):
+    """Raised when an Envoy Stack cannot be activated."""
 
 
 class EnvoyGateway:
-    """Discover configurations and dispatch applications through Envoy.
+    """Discover Stacks and dispatch applications through Envoy.
 
     Args:
         envoy_module: Optional module override used by tests.
@@ -45,13 +46,13 @@ class EnvoyGateway:
         """
         envoy_module = self._getEnvoyModule()
         required_names = (
-            "BundleConfig",
+            "Stack",
             "discoverBundlesAuto",
-            "getCurrentBundleConfig",
-            "listNamedConfigs",
+            "isStackName",
+            "listNamedStacks",
             "loadUserConfig",
             "proc",
-            "resolveNamedConfig",
+            "resolveNamedStack",
         )
         missing = [name for name in required_names if not hasattr(envoy_module, name)]
         if missing:
@@ -59,83 +60,97 @@ class EnvoyGateway:
             raise EnvoyUnavailableError(f"Envoy Python API is missing: {joined_names}")
         return str(getattr(envoy_module, "__version__", "unknown"))
 
-    def listConfigurations(self) -> tuple[_models.NamedConfiguration, ...]:
-        """Return published named configurations.
+    def listStacks(self) -> tuple[_models.NamedStack, ...]:
+        """Return published named Stacks.
 
         Returns:
-            Configurations sorted by name.
+            Stacks sorted by name.
 
         """
         try:
-            entries = self._getEnvoyModule().listNamedConfigs()
-            configurations = [
-                _models.NamedConfiguration(
+            entries = self._getEnvoyModule().listNamedStacks()
+            stacks = [
+                _models.NamedStack(
                     name=str(entry.name),
                     version=str(entry.version),
-                    path=Path(entry.path),
+                    path=self._canonicalPath(entry.path),
                 )
                 for entry in entries
             ]
         except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
-            raise EnvoyUnavailableError(f"Unable to list Envoy configurations: {error}") from error
-        return tuple(sorted(configurations, key=lambda entry: entry.name.casefold()))
+            raise EnvoyUnavailableError(f"Unable to list Envoy Stacks: {error}") from error
+        return tuple(sorted(stacks, key=lambda entry: entry.name.casefold()))
 
-    def getCurrentConfigurationName(self) -> str | None:
-        """Return the globally selected named configuration.
+    def getStackState(self, automatic_requested: bool) -> _models.StackState:
+        """Resolve the shared Stack selection and session fallback.
+
+        Args:
+            automatic_requested: Whether this session should use automatic resolution when the
+                shared user configuration has no Stack.
 
         Returns:
-            Configured name, or None when Envoy uses automatic discovery.
+            Resolved Stack state.
 
         """
         try:
             user_config = self._getEnvoyModule().loadUserConfig()
-            configured_value = user_config.get("bundles_config")
+            configured_value = user_config.get("stack")
         except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
             raise EnvoyUnavailableError(
                 f"Unable to read Envoy user configuration: {error}"
             ) from error
         if not configured_value:
-            return None
-        envoy_module = self._getEnvoyModule()
-        if envoy_module.isConfigName(configured_value):
-            return str(configured_value)
-        return None
+            mode = _models.StackMode.AUTOMATIC if automatic_requested else _models.StackMode.PROMPT
+            return _models.StackState(mode)
+        try:
+            selection = self._resolveStackSelection(str(configured_value))
+        except StackSwitchError as error:
+            raise EnvoyUnavailableError(str(error)) from error
+        return _models.StackState(_models.StackMode.EXPLICIT, selection)
 
-    def switchConfiguration(self, configuration_name: str | None) -> None:
-        """Validate and persist a named configuration globally.
+    def switchStack(self, stack_value: str) -> _models.StackSelection:
+        """Validate and persist a named or custom Stack globally.
 
         Args:
-            configuration_name: Published name, or None for automatic discovery.
+            stack_value: Published Stack name or `.estack` filesystem path.
+
+        Returns:
+            Normalized explicit Stack selection.
 
         Raises:
-            ConfigurationSwitchError: If resolution, validation, or persistence fails.
+            StackSwitchError: If resolution, validation, or persistence fails.
 
         """
         envoy_module = self._getEnvoyModule()
         try:
+            selection = self._resolveStackSelection(stack_value)
+            stack = envoy_module.Stack(selection.path)
+            tuple(stack.bundles)
             user_config = envoy_module.loadUserConfig()
-            if configuration_name is None:
-                user_config.unset("bundles_config")
-                user_config.save()
-                return
-            resolved_path = envoy_module.resolveNamedConfig(configuration_name)
-            if resolved_path is None:
-                raise ConfigurationSwitchError(
-                    f"Envoy configuration '{configuration_name}' could not be resolved"
-                )
-            configuration = envoy_module.BundleConfig(resolved_path)
-            tuple(configuration.bundles)
-            user_config.set("bundles_config", configuration_name)
+            user_config.set("stack", selection.persisted_value)
             user_config.save()
-        except ConfigurationSwitchError:
+            return selection
+        except StackSwitchError:
             raise
         except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
-            raise ConfigurationSwitchError(
-                f"Unable to activate Envoy configuration '{configuration_name}': {error}"
+            raise StackSwitchError(
+                f"Unable to activate Envoy Stack '{stack_value}': {error}"
             ) from error
 
-    def loadBundles(self) -> tuple[_models.BundleRecord, ...]:
-        """Load bundles participating in the active Envoy configuration.
+    def clearStack(self) -> None:
+        """Clear the shared Stack setting for Automatic resolution."""
+        try:
+            user_config = self._getEnvoyModule().loadUserConfig()
+            user_config.unset("stack")
+            user_config.save()
+        except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
+            raise StackSwitchError(f"Unable to enable Automatic resolution: {error}") from error
+
+    def loadBundles(self, stack_state: _models.StackState) -> tuple[_models.BundleRecord, ...]:
+        """Load bundles participating in the selected Stack mode.
+
+        Args:
+            stack_state: Resolved explicit, automatic, or prompt state.
 
         Returns:
             Bundle records suitable for catalog discovery.
@@ -143,29 +158,46 @@ class EnvoyGateway:
         """
         envoy_module = self._getEnvoyModule()
         try:
-            configuration = envoy_module.getCurrentBundleConfig()
-            if configuration is not None:
-                return tuple(self._recordFromBundle(bundle) for bundle in configuration.bundles)
-            return tuple(
-                self._recordFromBundleInfo(bundle_info)
-                for bundle_info in envoy_module.discoverBundlesAuto()
-            )
+            if stack_state.mode == _models.StackMode.PROMPT:
+                return ()
+            if stack_state.mode == _models.StackMode.AUTOMATIC:
+                return tuple(
+                    self._recordFromBundleInfo(bundle_info)
+                    for bundle_info in envoy_module.discoverBundlesAuto()
+                )
+            if stack_state.selection is None:
+                raise ValueError("Explicit Stack state has no selection")
+            stack = envoy_module.Stack(stack_state.selection.path)
+            return tuple(self._recordFromBundle(bundle) for bundle in stack.bundles)
         except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
             raise EnvoyUnavailableError(f"Unable to load Envoy bundles: {error}") from error
 
-    def spawnApplication(self, application: _models.ApplicationEntry) -> int:
+    def spawnApplication(
+        self,
+        application: _models.ApplicationEntry,
+        stack_state: _models.StackState,
+    ) -> int:
         """Dispatch an application through an isolated Envoy worker.
 
         Args:
             application: Catalog entry to launch.
+            stack_state: Stack mode that produced the catalog.
 
         Returns:
             Process identifier reported by Envoy.
 
         """
+        if stack_state.mode == _models.StackMode.PROMPT:
+            raise RuntimeError("Choose a Stack before launching applications")
+        stack_path = None
+        if stack_state.mode == _models.StackMode.EXPLICIT:
+            if stack_state.selection is None:
+                raise RuntimeError("Explicit Stack state has no selection")
+            stack_path = str(stack_state.selection.path)
         request = {
             "commandLine": [application.command, *application.args],
             "inTerminal": application.in_terminal,
+            "stackPath": stack_path,
         }
         creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         with tempfile.TemporaryDirectory(prefix="despatch-launch-") as temporary_directory:
@@ -203,17 +235,95 @@ class EnvoyGateway:
             raise RuntimeError("Envoy launch worker result must be an object")
         return result
 
-    def formatCommand(self, application: _models.ApplicationEntry) -> str:
+    def formatCommand(
+        self,
+        application: _models.ApplicationEntry,
+        stack_state: _models.StackState,
+    ) -> str:
         """Format an application as a copyable Envoy command line.
 
         Args:
             application: Catalog entry to format.
+            stack_state: Stack mode that produced the catalog.
 
         Returns:
             Platform-quoted command line.
 
         """
-        return subprocess.list2cmdline(["envoy", application.command, *application.args])
+        command_line = ["envoy"]
+        if stack_state.mode == _models.StackMode.EXPLICIT:
+            if stack_state.selection is None:
+                raise RuntimeError("Explicit Stack state has no selection")
+            command_line.extend(("--stack", str(stack_state.selection.path)))
+        command_line.extend((application.command, *application.args))
+        return subprocess.list2cmdline(command_line)
+
+    def _resolveStackSelection(self, stack_value: str) -> _models.StackSelection:
+        """Resolve a persisted name or path to an explicit Stack selection."""
+        envoy_module = self._getEnvoyModule()
+        try:
+            named_stacks = self.listStacks()
+            if envoy_module.isStackName(stack_value):
+                resolved_path = envoy_module.resolveNamedStack(stack_value)
+                if resolved_path is None:
+                    raise StackSwitchError(f"Envoy Stack '{stack_value}' could not be resolved")
+                canonical_path = self._canonicalStackPath(resolved_path)
+                named_stack = next(
+                    (entry for entry in named_stacks if entry.name == stack_value),
+                    None,
+                )
+                version = named_stack.version if named_stack is not None else ""
+                return _models.StackSelection(
+                    stack_value,
+                    stack_value,
+                    canonical_path,
+                    version,
+                    False,
+                )
+
+            canonical_path = self._canonicalStackPath(stack_value)
+            matching_stack = next(
+                (entry for entry in named_stacks if self._pathsEqual(entry.path, canonical_path)),
+                None,
+            )
+            if matching_stack is not None:
+                return _models.StackSelection(
+                    matching_stack.name,
+                    matching_stack.name,
+                    canonical_path,
+                    matching_stack.version,
+                    False,
+                )
+            return _models.StackSelection(
+                str(canonical_path),
+                canonical_path.name,
+                canonical_path,
+                is_custom=True,
+            )
+        except StackSwitchError:
+            raise
+        except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
+            raise StackSwitchError(
+                f"Unable to resolve Envoy Stack '{stack_value}': {error}"
+            ) from error
+
+    @staticmethod
+    def _canonicalPath(path: Path | str) -> Path:
+        """Return an absolute normalized path without requiring it to exist."""
+        return Path(path).expanduser().resolve()
+
+    @classmethod
+    def _canonicalStackPath(cls, path: Path | str) -> Path:
+        """Validate an `.estack` path and return its canonical absolute form."""
+        canonical_path = Path(path).expanduser().resolve(strict=True)
+        if canonical_path.suffix.casefold() != ".estack":
+            raise StackSwitchError("Envoy Stack files must use the .estack extension")
+        return canonical_path
+
+    @staticmethod
+    def _pathsEqual(first_path: Path, second_path: Path) -> bool:
+        """Compare canonical paths using platform filesystem casing rules."""
+        return os.path.normcase(str(first_path)) == os.path.normcase(str(second_path))
 
     def _getEnvoyModule(self) -> ModuleType | Any:
         """Import Envoy lazily so pure modules remain testable."""

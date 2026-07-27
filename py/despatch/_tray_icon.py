@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from Qt import QtCore, QtWidgets
 
-from . import _constants
-from . import _icons
-from . import _models
+from . import _constants, _icons, _models
 
 
 def _activationReason(reason_name: str):
@@ -22,16 +20,17 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
 
     showRequested = QtCore.Signal()
     launchRequested = QtCore.Signal(str, bool)
-    configurationRequested = QtCore.Signal(object)
+    stackRequested = QtCore.Signal(object)
+    customStackRequested = QtCore.Signal()
     refreshRequested = QtCore.Signal()
     settingsRequested = QtCore.Signal()
     quitRequested = QtCore.Signal()
 
     def __init__(self, parent=None):
         super().__init__(_icons.loadProductIcon(), parent)
-        self._snapshot = _models.CatalogSnapshot(None, (), (), ())
-        self._configuration_name: str | None = None
-        self._configurations: tuple[_models.NamedConfiguration, ...] = ()
+        self._stack_state = _models.StackState(_models.StackMode.PROMPT)
+        self._snapshot = _models.CatalogSnapshot(self._stack_state, (), (), ())
+        self._stacks: tuple[_models.NamedStack, ...] = ()
         self._favorites: frozenset[str] = frozenset()
         self.activated.connect(self._onActivated)
         self.setToolTip(_constants.PRODUCT_DESCRIPTION)
@@ -40,17 +39,16 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
     def setState(
         self,
         snapshot: _models.CatalogSnapshot,
-        configurations: tuple[_models.NamedConfiguration, ...],
-        configuration_name: str | None,
+        stacks: tuple[_models.NamedStack, ...],
+        stack_state: _models.StackState,
         favorites: frozenset[str],
     ) -> None:
-        """Update tray favorites and configuration actions."""
+        """Update tray favorites and Stack actions."""
         self._snapshot = snapshot
-        self._configurations = configurations
-        self._configuration_name = configuration_name
+        self._stacks = stacks
+        self._stack_state = stack_state
         self._favorites = favorites
-        config_label = configuration_name or "Automatic discovery"
-        self.setToolTip(f"{_constants.PRODUCT_NAME} · {config_label}")
+        self.setToolTip(f"{_constants.PRODUCT_NAME} · {self._stackLabel()}")
         self.rebuildMenu()
 
     def rebuildMenu(self) -> None:
@@ -83,24 +81,34 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
                 )
 
         menu.addSeparator()
-        configuration_menu = menu.addMenu(self._configuration_name or "Automatic discovery")
-        automatic_action = configuration_menu.addAction("Automatic discovery")
+        stack_menu = menu.addMenu(self._stackLabel())
+        automatic_action = stack_menu.addAction("Automatic resolution")
         automatic_action.setCheckable(True)
-        automatic_action.setChecked(self._configuration_name is None)
-        automatic_action.triggered.connect(
-            lambda checked=False: self.configurationRequested.emit(None)
-        )
-        if self._configurations:
-            configuration_menu.addSeparator()
-        for configuration in self._configurations:
-            action = configuration_menu.addAction(configuration.name)
+        automatic_action.setChecked(self._stack_state.mode == _models.StackMode.AUTOMATIC)
+        automatic_action.triggered.connect(lambda checked=False: self.stackRequested.emit(None))
+        if self._stacks:
+            stack_menu.addSeparator()
+        selection = self._stack_state.selection
+        for stack in self._stacks:
+            action = stack_menu.addAction(stack.name)
             action.setCheckable(True)
-            action.setChecked(configuration.name == self._configuration_name)
-            action.triggered.connect(
-                lambda checked=False, config_name=configuration.name: (
-                    self.configurationRequested.emit(config_name)
-                )
+            action.setChecked(
+                selection is not None
+                and not selection.is_custom
+                and stack.name == selection.persisted_value
             )
+            action.triggered.connect(
+                lambda checked=False, stack_name=stack.name: self.stackRequested.emit(stack_name)
+            )
+        if selection is not None and selection.is_custom:
+            stack_menu.addSeparator()
+            custom_action = stack_menu.addAction(selection.display_name)
+            custom_action.setCheckable(True)
+            custom_action.setChecked(True)
+            custom_action.setToolTip(str(selection.path))
+        stack_menu.addSeparator()
+        browse_action = stack_menu.addAction("Choose custom Stack…")
+        browse_action.triggered.connect(self.customStackRequested)
 
         refresh_action = menu.addAction("Refresh")
         refresh_action.triggered.connect(self.refreshRequested)
@@ -110,6 +118,16 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
         quit_action = menu.addAction("Quit")
         quit_action.triggered.connect(self.quitRequested)
         self.setContextMenu(menu)
+
+    def _stackLabel(self) -> str:
+        """Return the compact label for the active Stack mode."""
+        if self._stack_state.mode == _models.StackMode.PROMPT:
+            return "Choose a Stack…"
+        if self._stack_state.mode == _models.StackMode.AUTOMATIC:
+            return "Automatic resolution"
+        if self._stack_state.selection is not None:
+            return self._stack_state.selection.display_name
+        return "Choose a Stack…"
 
     def _onActivated(self, reason) -> None:
         """Show the main UI only for a left-click activation."""

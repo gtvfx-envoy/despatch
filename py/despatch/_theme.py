@@ -52,6 +52,7 @@ def _lightStyle() -> str:
         accent_hover="#5e4bc3",
         selection="#eeeafd",
         danger="#c84b4b",
+        custom_stack="#b7791f",
     )
 
 
@@ -68,6 +69,7 @@ def _darkStyle() -> str:
         accent_hover="#b4a7ff",
         selection="#363149",
         danger="#ff8787",
+        custom_stack="#f6c177",
     )
 
 
@@ -83,6 +85,7 @@ def _baseStyle(
     accent_hover: str,
     selection: str,
     danger: str,
+    custom_stack: str,
 ) -> str:
     """Build the common application stylesheet."""
     return f"""
@@ -109,6 +112,7 @@ def _baseStyle(
         selection-background-color: {accent};
     }}
     QLineEdit:focus, QComboBox:focus {{ border-color: {accent}; }}
+    QComboBox[customStack="true"] {{ border-color: {custom_stack}; }}
     QComboBox::drop-down {{ border: 0; width: 24px; }}
     QPushButton, QToolButton {{
         background: {surface_alt};

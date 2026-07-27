@@ -33,9 +33,16 @@ envoy despatch --popup
 ```
 
 Left-clicking the tray icon shows or raises the launcher. Right-clicking opens
-a compact menu containing favorite applications, Envoy configuration
-switching, refresh, settings, and quit actions. Closing the main window hides
-it to the tray.
+a compact menu containing favorite applications, Envoy Stack switching,
+refresh, settings, and quit actions. Closing the main window hides it to the
+tray.
+
+Despatch uses the Stack saved in Envoy's shared `stack` user setting. Named
+Stacks and custom `.estack` files can be selected from the launcher. When no
+Stack is saved, Despatch asks the user to choose one before presenting
+applications. Set `ENVOY_DEV_MODE=1` to default an otherwise unconfigured
+session to Automatic resolution. Automatic resolution can also be selected
+manually for the current session.
 
 ## Development
 
@@ -59,8 +66,8 @@ rules.
 
 ## Current milestone
 
-The initial release covers named Envoy configurations, manifest discovery,
+The initial release covers named and custom Envoy Stacks, manifest discovery,
 search, favorites, history, tray controls, application launch, terminal launch,
 settings, login startup, global shortcut registration, and actionable errors.
-Historical configuration browsing, feature overlays, and detailed cache
+Historical Stack browsing, feature overlays, and detailed cache
 management are intentionally deferred until their Envoy APIs are stable.

@@ -43,13 +43,13 @@ def main() -> int:
     application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     _theme.applyTheme(application, args.theme)
     window = _main_window.MainWindow()
-    configurations = (
-        _models.NamedConfiguration("studio", "2026-07-26", Path("studio.json")),
-        _models.NamedConfiguration("testing", "2026-07-24", Path("testing.json")),
+    stacks = (
+        _models.NamedStack("studio", "2026-07-26", Path("studio.estack")),
+        _models.NamedStack("testing", "2026-07-24", Path("testing.estack")),
     )
     groups = (
         _models.CatalogGroup("gt:sample:creative", "Creative", 0, "gt:sample"),
-        _models.CatalogGroup("gt:sample:pipeline", "Pipeline", 1, "gt:sample"),
+        _models.CatalogGroup("gt:sample:automation", "Automation", 1, "gt:sample"),
     )
     applications = (
         makeApplication(
@@ -68,8 +68,12 @@ def main() -> int:
         ),
         makeApplication("vscode", "Visual Studio Code", "Open the current workspace", "", 4),
     )
-    snapshot = _models.CatalogSnapshot("studio", applications, groups, ())
-    window.setConfigurations(configurations, "studio")
+    stack_state = _models.StackState(
+        _models.StackMode.EXPLICIT,
+        _models.StackSelection("studio", "studio", Path("studio.estack"), "2026-07-26"),
+    )
+    snapshot = _models.CatalogSnapshot(stack_state, applications, groups, ())
+    window.setStacks(stacks, stack_state)
     window.setCatalog(snapshot, frozenset({"gt:sample:krita"}), ("gt:sample:unreal",))
     window.setReady()
     window.show()

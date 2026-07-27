@@ -18,7 +18,7 @@ def launchApplication(
     """Spawn an application through the Envoy Python API.
 
     Args:
-        request: Validated launch request containing commandLine and inTerminal.
+        request: Validated launch request containing commandLine, inTerminal, and stackPath.
         envoy_module: Optional module override used by tests.
 
     Returns:
@@ -31,10 +31,10 @@ def launchApplication(
         if request["inTerminal"]
         else getattr(subprocess, "CREATE_NO_WINDOW", 0)
     )
-    process = module.proc.spawn(
-        request["commandLine"],
-        creationflags=creation_flags,
-    )
+    command_line = request["commandLine"]
+    if request["stackPath"] is not None:
+        command_line = ["--stack", request["stackPath"], *command_line]
+    process = module.proc.spawn(command_line, creationflags=creation_flags)
     return int(process.pid)
 
 
@@ -54,7 +54,20 @@ def _readRequest(request_path: Path) -> dict[str, Any]:
     in_terminal = request.get("inTerminal")
     if not isinstance(in_terminal, bool):
         raise ValueError("Launch request inTerminal must be a boolean")
-    return {"commandLine": command_line, "inTerminal": in_terminal}
+    stack_path = request.get("stackPath")
+    if stack_path is not None:
+        if not isinstance(stack_path, str) or not stack_path.strip():
+            raise ValueError("Launch request stackPath must be a string or null")
+        parsed_stack_path = Path(stack_path)
+        if not parsed_stack_path.is_absolute():
+            raise ValueError("Launch request stackPath must be absolute")
+        if parsed_stack_path.suffix.casefold() != ".estack":
+            raise ValueError("Launch request stackPath must use the .estack extension")
+    return {
+        "commandLine": command_line,
+        "inTerminal": in_terminal,
+        "stackPath": stack_path,
+    }
 
 
 def _writeResult(result_path: Path, result: dict[str, Any]) -> None:

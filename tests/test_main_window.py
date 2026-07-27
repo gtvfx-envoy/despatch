@@ -20,7 +20,69 @@ def makeSnapshot():
         source_path=Path("despatch.json"),
     )
     group = _models.CatalogGroup("gt:test:tools", "Tools", 0, "gt:test")
-    return _models.CatalogSnapshot("studio", (application,), (group,), ())
+    stack_state = _models.StackState(
+        _models.StackMode.EXPLICIT,
+        _models.StackSelection("studio", "studio", Path("studio.estack")),
+    )
+    return _models.CatalogSnapshot(stack_state, (application,), (group,), ())
+
+
+def testCustomStackSelectorShowsFilenameAndPath(qapp, tmp_path):
+    window = _main_window.MainWindow()
+    stack_path = (tmp_path / "my_stack.estack").resolve()
+    stack_state = _models.StackState(
+        _models.StackMode.EXPLICIT,
+        _models.StackSelection(
+            str(stack_path),
+            stack_path.name,
+            stack_path,
+            is_custom=True,
+        ),
+    )
+
+    window.setStacks((), stack_state)
+
+    assert window._stack_combo.currentText() == "my_stack.estack"
+    assert window._stack_combo.toolTip() == str(stack_path)
+    assert window._stack_combo.property("customStack") is True
+    window.allowClose()
+    window.close()
+
+
+def testAutomaticStackSelectionIsRequestable(qapp):
+    window = _main_window.MainWindow()
+    stack_state = _models.StackState(_models.StackMode.PROMPT)
+    received = []
+    window.stackRequested.connect(received.append)
+    window.setStacks((), stack_state)
+
+    window._stack_combo.setCurrentIndex(1)
+    qapp.processEvents()
+
+    assert received == [None]
+    window.allowClose()
+    window.close()
+
+
+def testCustomStackPickerRestoresActiveSelection(qapp):
+    window = _main_window.MainWindow()
+    stack = _models.NamedStack("studio", "2026-01-01", Path("studio.estack"))
+    stack_state = _models.StackState(
+        _models.StackMode.EXPLICIT,
+        _models.StackSelection("studio", "studio", stack.path),
+    )
+    received = []
+    window.customStackRequested.connect(lambda: received.append(True))
+    window.setStacks((stack,), stack_state)
+    active_index = window._stack_combo.currentIndex()
+
+    window._stack_combo.setCurrentIndex(window._custom_picker_index)
+    qapp.processEvents()
+
+    assert received == [True]
+    assert window._stack_combo.currentIndex() == active_index
+    window.allowClose()
+    window.close()
 
 
 def testSingleClickRequestsLaunch(qapp):

@@ -23,7 +23,7 @@ class CatalogLoader:
     """Build immutable catalog snapshots from an Envoy gateway.
 
     Args:
-        gateway: Object providing loadBundles and current configuration methods.
+        gateway: Object providing Stack-aware bundle loading.
         platform_name: Optional manifest platform override used by tests.
 
     """
@@ -32,18 +32,18 @@ class CatalogLoader:
         self._gateway = gateway
         self._platform_name = platform_name or getCurrentPlatform()
 
-    def loadCatalog(self) -> _models.CatalogSnapshot:
-        """Load and validate all manifests in the active configuration.
+    def loadCatalog(self, stack_state: _models.StackState) -> _models.CatalogSnapshot:
+        """Load and validate all manifests in the active Stack.
+
+        Args:
+            stack_state: Stack mode to use for bundle discovery.
 
         Returns:
             Complete application catalog and recoverable diagnostics.
 
         """
-        bundles = self._gateway.loadBundles()
-        configuration_name = self._gateway.getCurrentConfigurationName()
-        command_names = {
-            command_name for bundle in bundles for command_name in bundle.commands
-        }
+        bundles = self._gateway.loadBundles(stack_state)
+        command_names = {command_name for bundle in bundles for command_name in bundle.commands}
         groups: list[_models.CatalogGroup] = []
         applications: list[_models.ApplicationEntry] = []
         diagnostics: list[_models.CatalogDiagnostic] = []
@@ -68,7 +68,7 @@ class CatalogLoader:
         groups.sort(key=lambda group: (group.order, group.name.casefold(), group.stable_id))
         applications.sort(key=lambda application: (application.order, application.name.casefold()))
         return _models.CatalogSnapshot(
-            configuration_name=configuration_name,
+            stack_state=stack_state,
             applications=tuple(applications),
             groups=tuple(groups),
             diagnostics=tuple(diagnostics),
@@ -129,9 +129,7 @@ class CatalogLoader:
         applications_data = manifest_data.get("applications")
         if not isinstance(applications_data, list):
             diagnostics.append(
-                _models.CatalogDiagnostic(
-                    "error", "'applications' must be an array", manifest_path
-                )
+                _models.CatalogDiagnostic("error", "'applications' must be an array", manifest_path)
             )
             return groups, []
 
@@ -256,7 +254,7 @@ class CatalogLoader:
                 diagnostics,
                 manifest_path,
                 order,
-                f"command '{command}' is not available in the active Envoy configuration",
+                f"command '{command}' is not available in the active Envoy Stack",
             )
             return None
         platforms = application_data.get("platforms", [])

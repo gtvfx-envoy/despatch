@@ -48,7 +48,7 @@ An Envoy bundle exposes applications to Despatch through
 - `id`, `name`, and `command` are required non-empty strings.
 - `id` must be unique within the manifest. Despatch combines the bundle ID and
   application ID to form a globally stable identity.
-- `command` must exist somewhere in the active Envoy configuration.
+- `command` must exist somewhere in the active Envoy Stack.
 - `args` and `keywords` are optional arrays of strings.
 - `description` is optional display text.
 - `group` optionally refers to a group declared by the same manifest.

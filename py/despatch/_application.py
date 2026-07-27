@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import os
 import sys
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -27,6 +28,11 @@ from . import (
 )
 
 _LOG = logging.getLogger("despatch.application")
+
+
+def _isDevModeEnabled() -> bool:
+    """Return whether Despatch should default to Automatic resolution."""
+    return os.environ.get("ENVOY_DEV_MODE", "").strip() == "1"
 
 
 class DespatchApplication(QtCore.QObject):
@@ -57,10 +63,12 @@ class DespatchApplication(QtCore.QObject):
         self._poll_timer.setInterval(50)
         self._poll_timer.timeout.connect(self._pollFutures)
         self._poll_timer.start()
-        self._snapshot = _models.CatalogSnapshot(None, (), (), ())
+        self._stack_state = _models.StackState(_models.StackMode.PROMPT)
+        self._snapshot = _models.CatalogSnapshot(self._stack_state, (), (), ())
         self._applications: dict[str, _models.ApplicationEntry] = {}
-        self._configurations: tuple[_models.NamedConfiguration, ...] = ()
-        self._configuration_name: str | None = None
+        self._stacks: tuple[_models.NamedStack, ...] = ()
+        self._dev_mode = _isDevModeEnabled()
+        self._automatic_resolution_requested = self._dev_mode
         self._launching: set[str] = set()
         self._error_dialogs: list[_error_dialog.ErrorDialog] = []
         self._quitting = False
@@ -101,7 +109,7 @@ class DespatchApplication(QtCore.QObject):
         self._window.showLauncher()
 
     def refreshCatalog(self) -> None:
-        """Refresh configurations and application manifests asynchronously."""
+        """Refresh Stacks and application manifests asynchronously."""
         self._window.setLoading("Refreshing Envoy catalog…")
         self._submit(self._loadState, self._onStateLoaded, self._onCatalogError)
 
@@ -132,13 +140,15 @@ class DespatchApplication(QtCore.QObject):
         self._window.launchRequested.connect(self._launchApplication)
         self._window.favoriteToggleRequested.connect(self._toggleFavorite)
         self._window.copyRequested.connect(self._copyCommand)
-        self._window.configurationRequested.connect(self._switchConfiguration)
+        self._window.stackRequested.connect(self._switchStack)
+        self._window.customStackRequested.connect(self._chooseCustomStack)
         self._window.refreshRequested.connect(self.refreshCatalog)
         self._window.settingsRequested.connect(self._showSettings)
 
         self._tray_icon.showRequested.connect(self.showWindow)
         self._tray_icon.launchRequested.connect(self._launchApplication)
-        self._tray_icon.configurationRequested.connect(self._switchConfiguration)
+        self._tray_icon.stackRequested.connect(self._switchStack)
+        self._tray_icon.customStackRequested.connect(self._chooseCustomStack)
         self._tray_icon.refreshRequested.connect(self.refreshCatalog)
         self._tray_icon.settingsRequested.connect(self._showSettings)
         self._tray_icon.quitRequested.connect(self.quit)
@@ -146,28 +156,28 @@ class DespatchApplication(QtCore.QObject):
     def _loadState(
         self,
     ) -> tuple[
-        tuple[_models.NamedConfiguration, ...],
-        str | None,
+        tuple[_models.NamedStack, ...],
+        _models.StackState,
         _models.CatalogSnapshot,
     ]:
         """Load all state required for an atomic UI refresh."""
-        configurations = self._gateway.listConfigurations()
-        configuration_name = self._gateway.getCurrentConfigurationName()
-        snapshot = self._catalog_loader.loadCatalog()
-        return configurations, configuration_name, snapshot
+        stacks = self._gateway.listStacks()
+        stack_state = self._gateway.getStackState(self._automatic_resolution_requested)
+        snapshot = self._catalog_loader.loadCatalog(stack_state)
+        return stacks, stack_state, snapshot
 
     def _onStateLoaded(
         self,
         state: tuple[
-            tuple[_models.NamedConfiguration, ...],
-            str | None,
+            tuple[_models.NamedStack, ...],
+            _models.StackState,
             _models.CatalogSnapshot,
         ],
     ) -> None:
         """Atomically apply refreshed Envoy state."""
-        self._configurations, self._configuration_name, self._snapshot = state
+        self._stacks, self._stack_state, self._snapshot = state
         self._applications = self._snapshot.applicationMap()
-        self._window.setConfigurations(self._configurations, self._configuration_name)
+        self._window.setStacks(self._stacks, self._stack_state)
         self._refreshViews()
         diagnostic_count = len(self._snapshot.diagnostics)
         if diagnostic_count:
@@ -185,21 +195,55 @@ class DespatchApplication(QtCore.QObject):
         self._tray_icon.showMessage("Despatch could not refresh", message)
         _LOG.error("Catalog refresh failed", exc_info=(type(error), error, error.__traceback__))
 
-    def _switchConfiguration(self, configuration_name: str | None) -> None:
-        """Persist a selected Envoy configuration in the background."""
-        if configuration_name == self._configuration_name:
+    def _switchStack(self, stack_value: str | None) -> None:
+        """Persist an explicit Stack or enable Automatic resolution."""
+        if stack_value is None and self._stack_state.mode == _models.StackMode.AUTOMATIC:
             return
-        label = configuration_name or "automatic discovery"
+        selection = self._stack_state.selection
+        if (
+            stack_value is not None
+            and selection is not None
+            and stack_value == selection.persisted_value
+        ):
+            return
+        label = stack_value or "Automatic resolution"
         self._window.setLoading(f"Switching to {label}…")
 
         def on_success(unused_result: Any) -> None:
+            self._automatic_resolution_requested = True if stack_value is None else self._dev_mode
             self.refreshCatalog()
 
-        self._submit(
-            lambda: self._gateway.switchConfiguration(configuration_name),
-            on_success,
-            self._onCatalogError,
+        operation = (
+            self._gateway.clearStack
+            if stack_value is None
+            else lambda: self._gateway.switchStack(stack_value)
         )
+        self._submit(
+            operation,
+            on_success,
+            self._onStackSwitchError,
+        )
+
+    def _chooseCustomStack(self) -> None:
+        """Prompt for a custom `.estack` file and request its activation."""
+        selection = self._stack_state.selection
+        initial_directory = ""
+        if selection is not None:
+            initial_directory = str(selection.path.parent)
+        stack_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self._window,
+            "Choose an Envoy Stack",
+            initial_directory,
+            "Envoy Stack (*.estack)",
+        )
+        if stack_path:
+            self._switchStack(stack_path)
+
+    def _onStackSwitchError(self, error: BaseException) -> None:
+        """Restore the prior Stack selector state after a failed switch."""
+        self._window.setStacks(self._stacks, self._stack_state)
+        self._refreshViews()
+        self._onCatalogError(error)
 
     def _launchApplication(self, stable_id: str, force_terminal: bool) -> None:
         """Prepare and spawn a catalog application asynchronously."""
@@ -228,7 +272,12 @@ class DespatchApplication(QtCore.QObject):
                 str(error) or error.__class__.__name__,
             )
 
-        self._submit(lambda: self._gateway.spawnApplication(application), on_spawned, on_error)
+        stack_state = self._stack_state
+        self._submit(
+            lambda: self._gateway.spawnApplication(application, stack_state),
+            on_spawned,
+            on_error,
+        )
 
     def _toggleFavorite(self, stable_id: str) -> None:
         """Toggle a favorite and refresh both launch surfaces."""
@@ -242,7 +291,9 @@ class DespatchApplication(QtCore.QObject):
         application = self._applications.get(stable_id)
         if application is None:
             return
-        self._application.clipboard().setText(self._gateway.formatCommand(application))
+        self._application.clipboard().setText(
+            self._gateway.formatCommand(application, self._stack_state)
+        )
         self._window.setReady("Envoy command copied")
 
     def _showSettings(self) -> None:
@@ -313,8 +364,8 @@ class DespatchApplication(QtCore.QObject):
         )
         self._tray_icon.setState(
             self._snapshot,
-            self._configurations,
-            self._configuration_name,
+            self._stacks,
+            self._stack_state,
             self._settings.favorites,
         )
 

@@ -7,12 +7,7 @@ import sys
 
 from Qt import QtCore, QtWidgets
 
-from . import __version__
-from . import _application
-from . import _constants
-from . import _icons
-from . import _log
-from . import _single_instance
+from . import __version__, _application, _constants, _icons, _log, _single_instance
 
 
 def _parseArgs(arguments: list[str] | None = None) -> argparse.Namespace:
@@ -45,9 +40,9 @@ def _createApplication() -> QtWidgets.QApplication:
     application.setApplicationVersion(__version__)
     application.setOrganizationName(_constants.ORGANIZATION_NAME)
     application.setOrganizationDomain(_constants.ORGANIZATION_DOMAIN)
-    application.setWindowIcon(_icons.loadProductIcon()) # type: ignore
-    application.setQuitOnLastWindowClosed(False) # type: ignore
-    return application # type: ignore
+    application.setWindowIcon(_icons.loadProductIcon())  # type: ignore
+    application.setQuitOnLastWindowClosed(False)  # type: ignore
+    return application  # type: ignore
 
 
 def main(arguments: list[str] | None = None) -> int:

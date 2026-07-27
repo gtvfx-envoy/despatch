@@ -77,7 +77,7 @@ class SettingsDialog(QtWidgets.QDialog):
         layout.addLayout(form_layout)
 
         note = QtWidgets.QLabel(
-            "Configuration changes affect Envoy globally. Application favorites and history "
+            "Stack changes affect Envoy globally. Application favorites and history "
             "are stored only by Despatch."
         )
         note.setObjectName("mutedLabel")

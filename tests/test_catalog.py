@@ -1,18 +1,21 @@
 import json
+from pathlib import Path
 
 from despatch import _catalog, _models
 
+STACK_STATE = _models.StackState(
+    _models.StackMode.EXPLICIT,
+    _models.StackSelection("studio", "studio", Path("studio.estack")),
+)
+
 
 class FakeGateway:
-    def __init__(self, bundle, configuration_name="studio"):
+    def __init__(self, bundle):
         self.bundle = bundle
-        self.configuration_name = configuration_name
 
-    def loadBundles(self):
+    def loadBundles(self, stack_state):
+        assert stack_state == STACK_STATE
         return (self.bundle,)
-
-    def getCurrentConfigurationName(self):
-        return self.configuration_name
 
 
 def makeBundle(tmp_path, commands=("krita",)):
@@ -60,9 +63,9 @@ def testLoadsValidManifest(tmp_path):
         groups=[{"id": "creative", "name": "Creative", "order": 5}],
     )
 
-    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog()
+    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog(STACK_STATE)
 
-    assert snapshot.configuration_name == "studio"
+    assert snapshot.stack_state == STACK_STATE
     assert snapshot.applications[0].stable_id == "gt:creative:krita"
     assert snapshot.applications[0].icon_path == icon_path
     assert snapshot.groups[0].stable_id == "gt:creative:creative"
@@ -86,7 +89,7 @@ def testResolvesOrganizedIconBelowResourceRoot(tmp_path):
         ],
     )
 
-    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog()
+    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog(STACK_STATE)
 
     assert snapshot.applications[0].icon_path == icon_path
     assert not snapshot.diagnostics
@@ -107,7 +110,7 @@ def testSkipsUnknownCommandsAndWrongPlatform(tmp_path):
         ],
     )
 
-    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog()
+    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog(STACK_STATE)
 
     assert not snapshot.applications
     assert len(snapshot.diagnostics) == 1
@@ -123,7 +126,7 @@ def testRejectsIconPathEscape(tmp_path):
         [{"id": "krita", "name": "Krita", "command": "krita", "icon": "../outside.svg"}],
     )
 
-    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog()
+    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog(STACK_STATE)
 
     assert snapshot.applications[0].icon_path is None
     assert "escapes the bundle resources/icons directory" in snapshot.diagnostics[0].message
@@ -134,7 +137,7 @@ def testInvalidSchemaIsRecoverable(tmp_path):
     manifest_path = bundle.envoy_directory / "despatch.json"
     manifest_path.write_text('{"schemaVersion": 99, "applications": []}', encoding="utf-8")
 
-    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog()
+    snapshot = _catalog.CatalogLoader(FakeGateway(bundle), "windows").loadCatalog(STACK_STATE)
 
     assert not snapshot.applications
     assert "schemaVersion" in snapshot.diagnostics[0].message

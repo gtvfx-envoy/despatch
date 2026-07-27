@@ -6,8 +6,8 @@ from Qt import QtCore, QtGui, QtWidgets
 
 from . import _constants, _icons, _models, _search
 
-_APPLICATION_ROLE = QtCore.Qt.UserRole # type: ignore
-_SECTION_ROLE = QtCore.Qt.UserRole + 1 # type: ignore
+_APPLICATION_ROLE = QtCore.Qt.UserRole  # type: ignore
+_SECTION_ROLE = QtCore.Qt.UserRole + 1  # type: ignore
 
 
 def _globalPoint(event) -> QtCore.QPoint:
@@ -91,22 +91,26 @@ class MainWindow(QtWidgets.QMainWindow):
     launchRequested = QtCore.Signal(str, bool)
     favoriteToggleRequested = QtCore.Signal(str)
     copyRequested = QtCore.Signal(str)
-    configurationRequested = QtCore.Signal(object)
+    stackRequested = QtCore.Signal(object)
+    customStackRequested = QtCore.Signal()
     refreshRequested = QtCore.Signal()
     settingsRequested = QtCore.Signal()
 
     def __init__(self):
         super().__init__()
-        self._snapshot = _models.CatalogSnapshot(None, (), (), ())
+        stack_state = _models.StackState(_models.StackMode.PROMPT)
+        self._snapshot = _models.CatalogSnapshot(stack_state, (), (), ())
         self._application_map: dict[str, _models.ApplicationEntry] = {}
         self._favorites: frozenset[str] = frozenset()
         self._recent_applications: tuple[str, ...] = ()
         self._allow_close = False
-        self._populating_configurations = False
+        self._populating_stacks = False
+        self._active_stack_index = 0
+        self._custom_picker_index = -1
 
-        window_flags = QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint # type: ignore
+        window_flags = QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint  # type: ignore
         self.setWindowFlags(window_flags)
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True) # type: ignore
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground, True)  # type: ignore
         self.setWindowTitle(_constants.PRODUCT_NAME)
         self.setWindowIcon(_icons.loadProductIcon())
         self.setMinimumSize(
@@ -147,10 +151,10 @@ class MainWindow(QtWidgets.QMainWindow):
         shell_layout.addWidget(content, 1)
 
         toolbar = QtWidgets.QHBoxLayout()
-        self._configuration_combo = QtWidgets.QComboBox()
-        self._configuration_combo.setMinimumWidth(220)
-        self._configuration_combo.setToolTip("Active Envoy configuration")
-        toolbar.addWidget(self._configuration_combo, 1)
+        self._stack_combo = QtWidgets.QComboBox()
+        self._stack_combo.setMinimumWidth(220)
+        self._stack_combo.setToolTip("Active Envoy Stack")
+        toolbar.addWidget(self._stack_combo, 1)
 
         self._refresh_button = QtWidgets.QToolButton()
         self._refresh_button.setText("↻")
@@ -174,7 +178,7 @@ class MainWindow(QtWidgets.QMainWindow):
         content_layout.addWidget(self._status_label)
 
         self._application_list = QtWidgets.QListWidget()
-        self._application_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu) # type: ignore
+        self._application_list.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)  # type: ignore
         self._application_list.setIconSize(QtCore.QSize(34, 34))
         self._application_list.setSpacing(2)
         self._application_list.setUniformItemSizes(False)
@@ -191,7 +195,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._title_bar.minimizeRequested.connect(self.showMinimized)
         self._refresh_button.clicked.connect(self.refreshRequested)
         self._settings_button.clicked.connect(self.settingsRequested)
-        self._configuration_combo.currentIndexChanged.connect(self._onConfigurationChanged)
+        self._stack_combo.currentIndexChanged.connect(self._onStackChanged)
         self._search_input.textChanged.connect(self._populateApplications)
         self._search_input.returnPressed.connect(self._launchFirstVisible)
         self._application_list.itemClicked.connect(self._onItemClicked)
@@ -203,29 +207,62 @@ class MainWindow(QtWidgets.QMainWindow):
         escape_shortcut = QtGui.QShortcut(QtGui.QKeySequence("Escape"), self)
         escape_shortcut.activated.connect(self.hide)
 
-    def setConfigurations(
+    def setStacks(
         self,
-        configurations: tuple[_models.NamedConfiguration, ...],
-        current_name: str | None,
+        stacks: tuple[_models.NamedStack, ...],
+        stack_state: _models.StackState,
     ) -> None:
-        """Populate the named Envoy configuration selector.
+        """Populate the Envoy Stack selector.
 
         Args:
-            configurations: Available published configurations.
-            current_name: Currently selected name, or None for automatic discovery.
+            stacks: Available published Stacks.
+            stack_state: Current prompt, Automatic, or explicit Stack state.
 
         """
-        self._populating_configurations = True
-        self._configuration_combo.clear()
-        self._configuration_combo.addItem("Automatic discovery", None)
-        for configuration in configurations:
-            label = configuration.name
-            if configuration.version:
-                label = f"{label}  ·  {configuration.version}"
-            self._configuration_combo.addItem(label, configuration.name)
-        current_index = self._configuration_combo.findData(current_name)
-        self._configuration_combo.setCurrentIndex(max(current_index, 0))
-        self._populating_configurations = False
+        self._populating_stacks = True
+        self._stack_combo.clear()
+        self._stack_combo.addItem("Choose a Stack…", "")
+        prompt_item = self._stack_combo.model().item(0)
+        if prompt_item is not None:
+            prompt_item.setEnabled(False)
+        self._stack_combo.addItem("Automatic resolution", None)
+        for stack in stacks:
+            label = stack.name
+            if stack.version:
+                label = f"{label}  ·  {stack.version}"
+            self._stack_combo.addItem(label, stack.name)
+
+        selection = stack_state.selection
+        if stack_state.mode == _models.StackMode.PROMPT:
+            active_index = 0
+        elif stack_state.mode == _models.StackMode.AUTOMATIC:
+            active_index = 1
+        elif selection is not None and selection.is_custom:
+            self._stack_combo.addItem(selection.display_name, selection.persisted_value)
+            active_index = self._stack_combo.count() - 1
+            self._stack_combo.setItemData(
+                active_index,
+                str(selection.path),
+                QtCore.Qt.ToolTipRole,  # type: ignore
+            )
+        elif selection is not None:
+            active_index = self._stack_combo.findData(selection.persisted_value)
+            active_index = max(active_index, 0)
+        else:
+            active_index = 0
+
+        self._custom_picker_index = self._stack_combo.count()
+        self._stack_combo.addItem("Choose custom Stack…")
+        self._active_stack_index = active_index
+        self._stack_combo.setCurrentIndex(active_index)
+        is_custom = bool(selection is not None and selection.is_custom)
+        self._stack_combo.setProperty("customStack", is_custom)
+        self._stack_combo.setToolTip(
+            str(selection.path) if is_custom and selection is not None else "Active Envoy Stack"
+        )
+        self._stack_combo.style().unpolish(self._stack_combo)
+        self._stack_combo.style().polish(self._stack_combo)
+        self._populating_stacks = False
 
     def setCatalog(
         self,
@@ -246,12 +283,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._status_label.setText(message)
         self._status_label.style().unpolish(self._status_label)
         self._status_label.style().polish(self._status_label)
-        self._configuration_combo.setEnabled(False)
+        self._stack_combo.setEnabled(False)
         self._refresh_button.setEnabled(False)
 
     def setReady(self, message: str = "") -> None:
         """Restore interactive controls and display a status message."""
-        self._configuration_combo.setEnabled(True)
+        self._stack_combo.setEnabled(True)
         self._refresh_button.setEnabled(True)
         self._status_label.setObjectName("mutedLabel")
         self._status_label.setText(message)
@@ -259,7 +296,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setError(self, message: str) -> None:
         """Display a recoverable catalog or launch error."""
-        self._configuration_combo.setEnabled(True)
+        self._stack_combo.setEnabled(True)
         self._refresh_button.setEnabled(True)
         self._status_label.setObjectName("errorLabel")
         self._status_label.setText(message)
@@ -279,7 +316,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def focusSearch(self) -> None:
         """Focus and select the search field."""
-        self._search_input.setFocus(QtCore.Qt.ShortcutFocusReason) # type: ignore
+        self._search_input.setFocus(QtCore.Qt.ShortcutFocusReason)  # type: ignore
         self._search_input.selectAll()
 
     def allowClose(self) -> None:
@@ -361,17 +398,20 @@ class MainWindow(QtWidgets.QMainWindow):
                 self._addApplicationItem(application)
 
         if not self._snapshot.applications:
-            self._addEmptyItem("No applications are declared for this Envoy configuration")
+            if self._snapshot.stack_state.mode == _models.StackMode.PROMPT:
+                self._addEmptyItem("Choose a Stack to view applications")
+            else:
+                self._addEmptyItem("No applications are declared for the active Envoy Stack")
 
     def _addSection(self, section_name: str) -> None:
         """Append a non-interactive section label."""
         item = QtWidgets.QListWidgetItem(section_name.upper())
         item.setData(_SECTION_ROLE, True)
-        item.setFlags(QtCore.Qt.NoItemFlags) # type: ignore
+        item.setFlags(QtCore.Qt.NoItemFlags)  # type: ignore
         item.setSizeHint(QtCore.QSize(0, 28))
         font = item.font()
         font.setPointSizeF(8.0)
-        font.setWeight(QtGui.QFont.DemiBold) # type: ignore
+        font.setWeight(QtGui.QFont.DemiBold)  # type: ignore
         item.setFont(font)
         self._application_list.addItem(item)
 
@@ -389,8 +429,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def _addEmptyItem(self, message: str) -> None:
         """Append a centered non-interactive empty-state row."""
         item = QtWidgets.QListWidgetItem(message)
-        item.setFlags(QtCore.Qt.NoItemFlags) # type: ignore
-        item.setTextAlignment(QtCore.Qt.AlignCenter) # type: ignore
+        item.setFlags(QtCore.Qt.NoItemFlags)  # type: ignore
+        item.setTextAlignment(QtCore.Qt.AlignCenter)  # type: ignore
         item.setSizeHint(QtCore.QSize(0, 90))
         self._application_list.addItem(item)
 
@@ -437,11 +477,17 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         menu.exec_(self._application_list.viewport().mapToGlobal(point))
 
-    def _onConfigurationChanged(self, item_index: int) -> None:
-        """Request a globally persisted configuration change."""
-        if self._populating_configurations or item_index < 0:
+    def _onStackChanged(self, item_index: int) -> None:
+        """Request an Envoy Stack selection change."""
+        if self._populating_stacks or item_index < 0:
             return
-        self.configurationRequested.emit(self._configuration_combo.itemData(item_index))
+        if item_index == self._custom_picker_index:
+            self._populating_stacks = True
+            self._stack_combo.setCurrentIndex(self._active_stack_index)
+            self._populating_stacks = False
+            self.customStackRequested.emit()
+            return
+        self.stackRequested.emit(self._stack_combo.itemData(item_index))
 
     @staticmethod
     def _formatTooltip(application: _models.ApplicationEntry) -> str:

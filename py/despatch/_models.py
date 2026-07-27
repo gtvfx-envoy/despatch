@@ -3,16 +3,44 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 
 
 @dataclass(frozen=True, slots=True)
-class NamedConfiguration:
-    """A published Envoy bundle configuration."""
+class NamedStack:
+    """A published Envoy Stack."""
 
     name: str
     version: str
     path: Path
+
+
+class StackMode(StrEnum):
+    """The active Despatch Stack-resolution mode."""
+
+    PROMPT = "prompt"
+    AUTOMATIC = "automatic"
+    EXPLICIT = "explicit"
+
+
+@dataclass(frozen=True, slots=True)
+class StackSelection:
+    """A resolved explicit Envoy Stack selection."""
+
+    persisted_value: str
+    display_name: str
+    path: Path
+    version: str = ""
+    is_custom: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class StackState:
+    """The Stack resolution state used by the catalog and launch flow."""
+
+    mode: StackMode
+    selection: StackSelection | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,7 +102,7 @@ class CatalogDiagnostic:
 class CatalogSnapshot:
     """A complete immutable application catalog snapshot."""
 
-    configuration_name: str | None
+    stack_state: StackState
     applications: tuple[ApplicationEntry, ...]
     groups: tuple[CatalogGroup, ...]
     diagnostics: tuple[CatalogDiagnostic, ...]
