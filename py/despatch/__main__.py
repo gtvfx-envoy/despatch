@@ -11,6 +11,7 @@ from . import (
     __version__,
     _application,
     _constants,
+    _documentation,
     _icons,
     _launch_worker,
     _log,
@@ -25,6 +26,7 @@ def _parseArgs(arguments: list[str] | None = None) -> argparse.Namespace:
         description=_constants.PRODUCT_DESCRIPTION,
     )
     parser.add_argument("--popup", action="store_true", help="Show the launcher on startup")
+    parser.add_argument("--docs", action="store_true", help="Open the Despatch documentation")
     parser.add_argument("--settings", help="Use an alternate settings JSON file")
     parser.add_argument("--log-directory", help="Write rotating logs to this directory")
     parser.add_argument(
@@ -37,6 +39,11 @@ def _parseArgs(arguments: list[str] | None = None) -> argparse.Namespace:
         "--launch-worker",
         nargs=2,
         metavar=("REQUEST_PATH", "RESULT_PATH"),
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--docs-server",
+        metavar="READY_PATH",
         help=argparse.SUPPRESS,
     )
     parser.add_argument("--version", action="version", version=__version__)
@@ -64,7 +71,16 @@ def main(arguments: list[str] | None = None) -> int:
     args = _parseArgs(arguments)
     if args.launch_worker is not None:
         return _launch_worker.main(args.launch_worker)
+    if args.docs_server is not None:
+        return _documentation.serveDocumentation(args.docs_server)
     _log.setupLogging(args.log_level, args.log_directory)
+    if args.docs:
+        try:
+            _documentation.openDocumentation()
+        except _documentation.DocumentationError as error:
+            print(f"Unable to open Despatch documentation: {error}", file=sys.stderr)
+            return 1
+        return 0
     application = _createApplication()
     single_instance = _single_instance.SingleInstance()
     if not single_instance.acquireOrNotify():

@@ -15,6 +15,7 @@ from Qt import QtCore, QtWidgets
 
 from . import (
     _catalog,
+    _documentation,
     _envoy_gateway,
     _error_dialog,
     _main_window,
@@ -143,6 +144,7 @@ class DespatchApplication(QtCore.QObject):
         self._window.stackRequested.connect(self._switchStack)
         self._window.customStackRequested.connect(self._chooseCustomStack)
         self._window.refreshRequested.connect(self.refreshCatalog)
+        self._window.documentationRequested.connect(self._openDocumentation)
         self._window.settingsRequested.connect(self._showSettings)
 
         self._tray_icon.showRequested.connect(self.showWindow)
@@ -150,6 +152,7 @@ class DespatchApplication(QtCore.QObject):
         self._tray_icon.stackRequested.connect(self._switchStack)
         self._tray_icon.customStackRequested.connect(self._chooseCustomStack)
         self._tray_icon.refreshRequested.connect(self.refreshCatalog)
+        self._tray_icon.documentationRequested.connect(self._openDocumentation)
         self._tray_icon.settingsRequested.connect(self._showSettings)
         self._tray_icon.quitRequested.connect(self.quit)
 
@@ -335,6 +338,19 @@ class DespatchApplication(QtCore.QObject):
             return
         _theme.applyTheme(self._application, self._settings.theme)
         self._refreshViews()
+
+    def _openDocumentation(self) -> None:
+        """Open the Despatch documentation without blocking the Qt thread."""
+
+        def on_success(unused_url: str) -> None:
+            self._window.setReady("Documentation opened in your browser")
+
+        def on_error(error: BaseException) -> None:
+            message = str(error) or error.__class__.__name__
+            self._window.setError(f"Could not open documentation: {message}")
+            self._showErrorDialog("Documentation could not be opened", message)
+
+        self._submit(_documentation.openDocumentation, on_success, on_error)
 
     def _configureGlobalShortcut(
         self,

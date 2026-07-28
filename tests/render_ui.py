@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from types import SimpleNamespace
 
 from Qt import QtWidgets
 
-from despatch import _main_window, _models, _theme
+from despatch import _main_window, _models, _settings_dialog, _theme
 
 
 def makeApplication(
@@ -38,10 +39,24 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("output", type=Path)
     parser.add_argument("--theme", choices=["light", "dark"], default="dark")
+    parser.add_argument("--view", choices=["launcher", "settings"], default="launcher")
     args = parser.parse_args()
 
     application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     _theme.applyTheme(application, args.theme)
+    widget = makeLauncher() if args.view == "launcher" else makeSettingsDialog()
+    widget.show()
+    application.processEvents()
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    saved = widget.grab().save(str(args.output))
+    if isinstance(widget, _main_window.MainWindow):
+        widget.allowClose()
+    widget.close()
+    return 0 if saved else 1
+
+
+def makeLauncher() -> _main_window.MainWindow:
+    """Build a populated launcher suitable for documentation screenshots."""
     window = _main_window.MainWindow()
     stacks = (
         _models.NamedStack("studio", "2026-07-26", Path("studio.estack")),
@@ -76,13 +91,23 @@ def main() -> int:
     window.setStacks(stacks, stack_state)
     window.setCatalog(snapshot, frozenset({"gt:sample:krita"}), ("gt:sample:unreal",))
     window.setReady()
-    window.show()
-    application.processEvents()
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    saved = window.grab().save(str(args.output))
-    window.allowClose()
-    window.close()
-    return 0 if saved else 1
+    return window
+
+
+def makeSettingsDialog() -> _settings_dialog.SettingsDialog:
+    """Build a representative Settings dialog for documentation."""
+    settings = SimpleNamespace(
+        theme="dark",
+        keep_open_after_launch=False,
+        autostart=True,
+        global_shortcut_enabled=True,
+        global_shortcut="Ctrl+Alt+Space",
+    )
+    return _settings_dialog.SettingsDialog(
+        settings,
+        autostart_supported=True,
+        shortcut_supported=True,
+    )
 
 
 if __name__ == "__main__":

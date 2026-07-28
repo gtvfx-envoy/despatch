@@ -37,6 +37,10 @@ executable = [
     "PySide6==6.11.1",
     "Qt.py==2.0.5",
 ]
+docs = [
+    "properdocs",
+    "mkdocs-material",
+]
 
 [tool.setuptools]
 packages = ["despatch", "despatch.resources"]

@@ -12,6 +12,7 @@ $pyinstaller_version = "6.21.0"
 $script_directory = Split-Path -Parent $PSCommandPath
 $repository_root = (Resolve-Path -LiteralPath (Join-Path $script_directory "..")).Path
 $spec_path = Join-Path $repository_root "pyinstaller.spec"
+$python_wrapper = Join-Path $script_directory "invoke-build-python.py"
 $dist_directory = Join-Path $repository_root "dist"
 $work_directory = Join-Path $repository_root "build\pyinstaller"
 $tool_directory = Join-Path $repository_root "build\pyinstaller-tools"
@@ -25,27 +26,45 @@ function Invoke-BuildPython {
         [string[]]$PythonArguments
     )
 
-    if ($PythonExecutable) {
-        & $PythonExecutable @PythonArguments
-    } else {
-        & envoy python @PythonArguments
-    }
-    if ($LASTEXITCODE -ne 0) {
-        throw "Python command failed with exit code $LASTEXITCODE."
+    $status_path = [IO.Path]::GetTempFileName()
+    Remove-Item -LiteralPath $status_path -Force
+    try {
+        $wrapper_arguments = @(
+            $python_wrapper,
+            "--status",
+            $status_path,
+            "--tool-directory",
+            $tool_directory,
+            "--"
+        ) + $PythonArguments
+        if ($PythonExecutable) {
+            & $PythonExecutable @wrapper_arguments
+        } else {
+            & envoy python @wrapper_arguments
+        }
+        if (-not (Test-Path -LiteralPath $status_path)) {
+            throw "Build Python did not report an exit code."
+        }
+        $status = Get-Content -LiteralPath $status_path -Raw | ConvertFrom-Json
+        if ($status.exitCode -ne 0) {
+            throw "Python command failed with exit code $($status.exitCode)."
+        }
+    } finally {
+        Remove-Item -LiteralPath $status_path -Force -ErrorAction SilentlyContinue
     }
 }
 
-function Test-PyInstallerVersion {
-    $version_check = @(
-        "-c",
-        "import PyInstaller, sys; sys.exit(PyInstaller.__version__ != '$pyinstaller_version')"
-    )
-    if ($PythonExecutable) {
-        & $PythonExecutable @version_check *> $null
-    } else {
-        & envoy python @version_check *> $null
+function Test-BuildTools {
+    try {
+        Invoke-BuildPython @(
+            "-c",
+            "import PyInstaller, material, properdocs, sys; " +
+                "sys.exit(PyInstaller.__version__ != '$pyinstaller_version')"
+        ) *> $null
+        return $true
+    } catch {
+        return $false
     }
-    return $LASTEXITCODE -eq 0
 }
 
 try {
@@ -57,17 +76,9 @@ try {
         Get-Command -Name "envoy" -ErrorAction Stop | Out-Null
     }
 
-    if (Test-Path -LiteralPath $tool_directory) {
-        $env:PYTHONPATH = if ($original_python_path) {
-            "$tool_directory$([IO.Path]::PathSeparator)$original_python_path"
-        } else {
-            $tool_directory
-        }
-    }
-
-    if (-not (Test-PyInstallerVersion)) {
+    if (-not (Test-BuildTools)) {
         if ($SkipToolInstall) {
-            throw "PyInstaller $pyinstaller_version is not available."
+            throw "PyInstaller $pyinstaller_version and the documentation tools are required."
         }
         New-Item -ItemType Directory -Path $tool_directory -Force | Out-Null
         Invoke-BuildPython @(
@@ -78,18 +89,18 @@ try {
             "--upgrade",
             "--target",
             $tool_directory,
-            "PyInstaller==$pyinstaller_version"
+            "PyInstaller==$pyinstaller_version",
+            "properdocs",
+            "mkdocs-material"
         )
-        $env:PYTHONPATH = if ($original_python_path) {
-            "$tool_directory$([IO.Path]::PathSeparator)$original_python_path"
-        } else {
-            $tool_directory
+        if (-not (Test-BuildTools)) {
+            throw "The required build tools are unavailable after installation."
         }
     }
 
     Invoke-BuildPython @(
         "-c",
-        "import PyInstaller, PySide6, Qt, envoy, despatch; " +
+        "import PyInstaller, PySide6, Qt, envoy, despatch, properdocs; " +
             "print('Freezing with', PyInstaller.__version__, Qt.__binding__)"
     )
 
@@ -98,6 +109,12 @@ try {
 
     Push-Location $repository_root
     try {
+        Invoke-BuildPython @(
+            "-m",
+            "properdocs",
+            "build",
+            "--clean"
+        )
         Invoke-BuildPython @(
             "-m",
             "PyInstaller",

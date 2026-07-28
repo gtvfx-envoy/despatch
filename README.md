@@ -6,6 +6,14 @@ declared application metadata from active Envoy bundles, presents a fast
 searchable catalog, and always dispatches commands through Envoy's concatenated
 environment.
 
+Full user and implementer documentation is available at
+[gtvfx-contrib.github.io/gt-despatch](https://gtvfx-contrib.github.io/gt-despatch/).
+The standalone executable also includes the site for offline use:
+
+```powershell
+despatch --docs
+```
+
 ## Runtime
 
 Despatch targets the studio's Envoy-provided Python 3.11.9 environment. That
@@ -66,12 +74,13 @@ Python, Qt.py, PySide6, and the Envoy Python API:
 .\scripts\build-executable.ps1
 ```
 
-The script installs its pinned PyInstaller build tool under the ignored
-`build/` directory when necessary. It writes the one-file, windowed executable
-to `dist/despatch.exe`. Pass `-SkipToolInstall` to require PyInstaller to be
-available already, or `-PythonExecutable <path>` to build with an explicitly
-prepared Python 3.11 environment instead of `envoy python`. `-Console` creates
-a temporary console-enabled build when diagnosing packaged startup failures.
+The script installs its pinned documentation and PyInstaller build tools under
+the ignored `build/` directory when necessary. It builds the ProperDocs site,
+then writes the one-file, windowed executable to `dist/despatch.exe`. Pass
+`-SkipToolInstall` to require the build tools to be available already, or
+`-PythonExecutable <path>` to build with an explicitly prepared Python 3.11
+environment instead of `envoy python`. `-Console` creates a temporary
+console-enabled build when diagnosing packaged startup failures.
 
 The `Build & Release` GitHub Actions workflow runs the same script on Windows.
 Manual runs retain the executable as a workflow artifact; tags matching `v*`
@@ -83,8 +92,8 @@ manual compatibility builds.
 
 Bundles opt into the GUI by adding `.envoy/despatch.json`. Unlisted Envoy
 commands remain available from the command line but are not shown in Despatch.
-See [the manifest reference](docs/manifest.md) for the schema and validation
-rules.
+See [the manifest reference](docs/technical/manifests.md) for the schema and
+validation rules.
 
 ## Current milestone
 

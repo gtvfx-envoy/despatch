@@ -94,7 +94,8 @@ def _baseStyle(
         font-family: "Segoe UI", "Inter", sans-serif;
         font-size: 10pt;
     }}
-    QMainWindow, QDialog {{ background: transparent; }}
+    QMainWindow {{ background: transparent; }}
+    QDialog {{ background: {surface}; }}
     QFrame#windowShell, QFrame#dialogShell {{
         background: {surface};
         border: 1px solid {border};

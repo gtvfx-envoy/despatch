@@ -130,3 +130,17 @@ def testSearchEnterLaunchesFirstMatch(qapp):
     assert received == [("gt:test:app", False)]
     window.allowClose()
     window.close()
+
+
+def testDocumentationButtonRequestsHelp(qapp):
+    window = _main_window.MainWindow()
+    received = []
+    window.documentationRequested.connect(lambda: received.append(True))
+
+    window._documentation_button.click()
+    qapp.processEvents()
+
+    assert received == [True]
+    assert window._documentation_button.accessibleName() == "Documentation"
+    window.allowClose()
+    window.close()

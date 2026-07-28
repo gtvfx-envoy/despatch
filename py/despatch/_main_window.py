@@ -94,6 +94,7 @@ class MainWindow(QtWidgets.QMainWindow):
     stackRequested = QtCore.Signal(object)
     customStackRequested = QtCore.Signal()
     refreshRequested = QtCore.Signal()
+    documentationRequested = QtCore.Signal()
     settingsRequested = QtCore.Signal()
 
     def __init__(self):
@@ -161,6 +162,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._refresh_button.setToolTip("Refresh catalog")
         toolbar.addWidget(self._refresh_button)
 
+        self._documentation_button = QtWidgets.QToolButton()
+        self._documentation_button.setText("?")
+        self._documentation_button.setToolTip("Documentation")
+        self._documentation_button.setAccessibleName("Documentation")
+        toolbar.addWidget(self._documentation_button)
+
         self._settings_button = QtWidgets.QToolButton()
         self._settings_button.setText("⚙")
         self._settings_button.setToolTip("Settings")
@@ -194,6 +201,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._title_bar.closeRequested.connect(self.hide)
         self._title_bar.minimizeRequested.connect(self.showMinimized)
         self._refresh_button.clicked.connect(self.refreshRequested)
+        self._documentation_button.clicked.connect(self.documentationRequested)
         self._settings_button.clicked.connect(self.settingsRequested)
         self._stack_combo.currentIndexChanged.connect(self._onStackChanged)
         self._search_input.textChanged.connect(self._populateApplications)

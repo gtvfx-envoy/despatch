@@ -59,7 +59,7 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          python -m pip install $env:ENVOY_WHEEL '.[executable]'
+          python -m pip install $env:ENVOY_WHEEL '.[executable,docs]'
 
       - name: Build executable
         shell: pwsh
@@ -76,7 +76,55 @@ jobs:
               -Wait `
               -PassThru
           if ($process.ExitCode -ne 0) {
-              throw "despatch.exe --version failed with exit code $($process.ExitCode)."
+            throw "despatch.exe --version failed with exit code $($process.ExitCode)."
+          }
+
+      - name: Verify bundled documentation
+        shell: pwsh
+        run: |
+          $readyPath = Join-Path $env:RUNNER_TEMP 'despatch-docs-ready.json'
+          function Stop-ProcessTree {
+            param([int]$ProcessId)
+            $childIds = @(
+              Get-CimInstance Win32_Process -Filter "ParentProcessId = $ProcessId" |
+                Select-Object -ExpandProperty ProcessId
+            )
+            foreach ($childId in $childIds) {
+              Stop-ProcessTree -ProcessId $childId
+            }
+            Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
+          }
+          Remove-Item -LiteralPath $readyPath -Force -ErrorAction SilentlyContinue
+          $process = Start-Process `
+              -FilePath .\dist\despatch.exe `
+              -ArgumentList '--docs-server', $readyPath `
+              -PassThru
+          try {
+            $deadline = [DateTime]::UtcNow.AddSeconds(30)
+            while (-not (Test-Path -LiteralPath $readyPath)) {
+              if ($process.HasExited) {
+                throw "Documentation helper exited with code $($process.ExitCode)."
+              }
+              if ([DateTime]::UtcNow -ge $deadline) {
+                throw 'Timed out waiting for the documentation helper.'
+              }
+              Start-Sleep -Milliseconds 100
+            }
+            $ready = Get-Content -LiteralPath $readyPath -Raw | ConvertFrom-Json
+            if ($ready.error) {
+              throw "Documentation helper failed: $($ready.error)"
+            }
+            $response = Invoke-WebRequest -Uri $ready.url -UseBasicParsing
+            if ($response.StatusCode -ne 200 -or $response.Content -notmatch '<title>Despatch') {
+              throw 'The bundled documentation home page is invalid.'
+            }
+            $asset = Invoke-WebRequest -Uri "$($ready.url)search/search_index.json" -UseBasicParsing
+            if ($asset.StatusCode -ne 200) {
+              throw 'The bundled documentation search index is unavailable.'
+            }
+          } finally {
+            Stop-ProcessTree -ProcessId $process.Id
+            Remove-Item -LiteralPath $readyPath -Force -ErrorAction SilentlyContinue
           }
 
       - name: Upload workflow artifact

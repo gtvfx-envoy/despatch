@@ -23,6 +23,7 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
     stackRequested = QtCore.Signal(object)
     customStackRequested = QtCore.Signal()
     refreshRequested = QtCore.Signal()
+    documentationRequested = QtCore.Signal()
     settingsRequested = QtCore.Signal()
     quitRequested = QtCore.Signal()
 
@@ -112,6 +113,8 @@ class DespatchTrayIcon(QtWidgets.QSystemTrayIcon):
 
         refresh_action = menu.addAction("Refresh")
         refresh_action.triggered.connect(self.refreshRequested)
+        documentation_action = menu.addAction("Documentation")
+        documentation_action.triggered.connect(self.documentationRequested)
         settings_action = menu.addAction("Settings")
         settings_action.triggered.connect(self.settingsRequested)
         menu.addSeparator()

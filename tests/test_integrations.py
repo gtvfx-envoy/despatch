@@ -4,7 +4,7 @@ from pathlib import Path
 
 from Qt import QtCore, QtGui, QtWidgets
 
-from despatch import _icons, _platform, _single_instance, _theme
+from despatch import _icons, _models, _platform, _single_instance, _theme, _tray_icon
 
 
 def testProductIconUsesRepositoryResources(qapp):
@@ -101,3 +101,23 @@ def testSingleInstanceNotifiesPrimary(qapp):
         )
     finally:
         primary.close()
+
+
+def testTrayMenuRequestsDocumentation(qapp):
+    tray_icon = _tray_icon.DespatchTrayIcon()
+    tray_icon.setState(
+        _models.CatalogSnapshot(_models.StackState(_models.StackMode.PROMPT), (), (), ()),
+        (),
+        _models.StackState(_models.StackMode.PROMPT),
+        frozenset(),
+    )
+    received = []
+    tray_icon.documentationRequested.connect(lambda: received.append(True))
+    documentation_action = next(
+        action for action in tray_icon.contextMenu().actions() if action.text() == "Documentation"
+    )
+
+    documentation_action.trigger()
+    qapp.processEvents()
+
+    assert received == [True]

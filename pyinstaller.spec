@@ -8,13 +8,20 @@ from pathlib import Path
 PROJECT_ROOT = Path(SPECPATH).resolve()
 SOURCE_ROOT = PROJECT_ROOT / "py"
 RESOURCE_ROOT = PROJECT_ROOT / "resources"
+DOCUMENTATION_ROOT = PROJECT_ROOT / "site"
 CONSOLE_BUILD = os.environ.get("DESPATCH_CONSOLE_BUILD") == "1"
+
+if not (DOCUMENTATION_ROOT / "index.html").is_file():
+    raise SystemExit("Build the ProperDocs site before running PyInstaller")
 
 analysis = Analysis(
     [str(PROJECT_ROOT / "scripts" / "pyinstaller_entry.py")],
     pathex=[str(SOURCE_ROOT)],
     binaries=[],
-    datas=[(str(RESOURCE_ROOT), "despatch/resources")],
+    datas=[
+        (str(RESOURCE_ROOT), "despatch/resources"),
+        (str(DOCUMENTATION_ROOT), "despatch/docs"),
+    ],
     hiddenimports=[
         "envoy",
         "envoy._envoy",

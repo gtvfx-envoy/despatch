@@ -1,0 +1,21 @@
+name: production
+namespace: studio:lighting
+source:
+  type: local
+pinned_version: "2026.07"
+metadata:
+  owner: lighting-tools
+  tier: production
+  support_channel: "#lighting-tools"
+bundles:
+  - path: ${STUDIO_BUNDLE_ROOT}/globals/4.2.0
+    metadata:
+      role: baseline
+      required: true
+  - path: ${STUDIO_BUNDLE_ROOT}/pythoncore/3.11.9
+    metadata:
+      role: runtime
+  - path: ${SHOW_BUNDLE_ROOT}/lighting/12.4.1
+    metadata:
+      role: department
+      support_tier: critical

@@ -5,6 +5,8 @@ PRODUCT_VERSION = "0.1.0"
 PRODUCT_DESCRIPTION = "Application launcher for Envoy-managed environments"
 ORGANIZATION_NAME = "gtvfx-contrib"
 ORGANIZATION_DOMAIN = "gtvfx-contrib.github.io"
+DOCUMENTATION_URL = "https://gtvfx-contrib.github.io/gt-despatch/"
+DOCUMENTATION_IDLE_TIMEOUT_SECONDS = 2 * 60 * 60
 
 MANIFEST_FILENAME = "despatch.json"
 MANIFEST_SCHEMA_VERSION = 1
