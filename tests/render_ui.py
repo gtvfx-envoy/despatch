@@ -63,8 +63,8 @@ def makeLauncher() -> _main_window.MainWindow:
         _models.NamedStack("testing", "2026-07-24", Path("testing.estack")),
     )
     groups = (
-        _models.CatalogGroup("gt:sample:creative", "Creative", 0, "gt:sample"),
-        _models.CatalogGroup("gt:sample:automation", "Automation", 1, "gt:sample"),
+        _models.CatalogGroup("creative", "Creative", 0, "gt:sample"),
+        _models.CatalogGroup("automation", "Automation", 1, "gt:sample"),
     )
     applications = (
         makeApplication(

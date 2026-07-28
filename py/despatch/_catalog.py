@@ -4,10 +4,20 @@ from __future__ import annotations
 
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from . import _constants, _models
+
+
+@dataclass(frozen=True, slots=True)
+class _ManifestRecord:
+    """One validated manifest and its contributing bundle."""
+
+    bundle: _models.BundleRecord
+    path: Path
+    data: dict[str, Any]
 
 
 def getCurrentPlatform() -> str:
@@ -44,10 +54,8 @@ class CatalogLoader:
         """
         bundles = self._gateway.loadBundles(stack_state)
         command_names = {command_name for bundle in bundles for command_name in bundle.commands}
-        groups: list[_models.CatalogGroup] = []
-        applications: list[_models.ApplicationEntry] = []
         diagnostics: list[_models.CatalogDiagnostic] = []
-
+        manifests: list[_ManifestRecord] = []
         for bundle in bundles:
             manifest_path = bundle.envoy_directory / _constants.MANIFEST_FILENAME
             if not manifest_path.is_file():
@@ -55,15 +63,35 @@ class CatalogLoader:
             manifest_data = self._readManifest(manifest_path, diagnostics)
             if manifest_data is None:
                 continue
-            bundle_groups, bundle_applications = self._parseManifest(
-                bundle,
-                manifest_path,
-                manifest_data,
-                command_names,
+            manifests.append(_ManifestRecord(bundle, manifest_path, manifest_data))
+
+        groups = self._parseGroups(manifests, diagnostics)
+        group_ids = {group.stable_id for group in groups}
+        applications: list[_models.ApplicationEntry] = []
+        suppressed_bundles: set[str] = set()
+        suppressed_applications: set[str] = set()
+        for manifest in manifests:
+            applications.extend(
+                self._parseApplications(
+                    manifest,
+                    command_names,
+                    group_ids,
+                    diagnostics,
+                )
+            )
+            manifest_bundles, manifest_applications = self._parseSuppressions(
+                manifest,
                 diagnostics,
             )
-            groups.extend(bundle_groups)
-            applications.extend(bundle_applications)
+            suppressed_bundles.update(manifest_bundles)
+            suppressed_applications.update(manifest_applications)
+
+        applications = [
+            application
+            for application in applications
+            if application.bundle_id not in suppressed_bundles
+            and application.stable_id not in suppressed_applications
+        ]
 
         groups.sort(key=lambda group: (group.order, group.name.casefold(), group.stable_id))
         applications.sort(key=lambda application: (application.order, application.name.casefold()))
@@ -115,30 +143,31 @@ class CatalogLoader:
             return None
         return manifest_data
 
-    def _parseManifest(
+    def _parseApplications(
         self,
-        bundle: _models.BundleRecord,
-        manifest_path: Path,
-        manifest_data: dict[str, Any],
+        manifest: _ManifestRecord,
         command_names: set[str],
+        group_ids: set[str],
         diagnostics: list[_models.CatalogDiagnostic],
-    ) -> tuple[list[_models.CatalogGroup], list[_models.ApplicationEntry]]:
-        """Validate one parsed manifest."""
-        groups = self._parseGroups(bundle, manifest_path, manifest_data.get("groups"), diagnostics)
-        group_ids = {group.stable_id for group in groups}
-        applications_data = manifest_data.get("applications")
+    ) -> list[_models.ApplicationEntry]:
+        """Validate and construct applications from one manifest."""
+        applications_data = manifest.data.get("applications")
         if not isinstance(applications_data, list):
             diagnostics.append(
-                _models.CatalogDiagnostic("error", "'applications' must be an array", manifest_path)
+                _models.CatalogDiagnostic(
+                    "error",
+                    "'applications' must be an array",
+                    manifest.path,
+                )
             )
-            return groups, []
+            return []
 
         applications: list[_models.ApplicationEntry] = []
         seen_ids: set[str] = set()
         for order, application_data in enumerate(applications_data):
             application = self._parseApplication(
-                bundle,
-                manifest_path,
+                manifest.bundle,
+                manifest.path,
                 application_data,
                 order,
                 command_names,
@@ -148,69 +177,155 @@ class CatalogLoader:
             )
             if application is not None:
                 applications.append(application)
-        return groups, applications
+        return applications
 
     @staticmethod
     def _parseGroups(
-        bundle: _models.BundleRecord,
-        manifest_path: Path,
-        groups_data: Any,
+        manifests: list[_ManifestRecord],
         diagnostics: list[_models.CatalogDiagnostic],
     ) -> list[_models.CatalogGroup]:
-        """Validate manifest group declarations."""
-        if groups_data is None:
-            return []
-        if not isinstance(groups_data, list):
-            diagnostics.append(
-                _models.CatalogDiagnostic("warning", "'groups' must be an array", manifest_path)
-            )
-            return []
-        groups: list[_models.CatalogGroup] = []
-        seen_ids: set[str] = set()
-        for order, group_data in enumerate(groups_data):
-            if not isinstance(group_data, dict):
+        """Validate and register Stack-wide group declarations."""
+        groups_by_id: dict[str, _models.CatalogGroup] = {}
+        for manifest in manifests:
+            groups_data = manifest.data.get("groups")
+            if groups_data is None:
+                continue
+            if not isinstance(groups_data, list):
                 diagnostics.append(
                     _models.CatalogDiagnostic(
-                        "warning", "Group entries must be objects", manifest_path
+                        "warning",
+                        "'groups' must be an array",
+                        manifest.path,
                     )
                 )
                 continue
-            group_id = group_data.get("id")
-            group_name = group_data.get("name")
-            if not isinstance(group_id, str) or not group_id.strip():
-                diagnostics.append(
-                    _models.CatalogDiagnostic(
-                        "warning", "Group 'id' must be a string", manifest_path
+            for order, group_data in enumerate(groups_data):
+                if not isinstance(group_data, dict):
+                    diagnostics.append(
+                        _models.CatalogDiagnostic(
+                            "warning",
+                            "Group entries must be objects",
+                            manifest.path,
+                        )
                     )
-                )
-                continue
-            if not isinstance(group_name, str) or not group_name.strip():
-                diagnostics.append(
-                    _models.CatalogDiagnostic(
-                        "warning", "Group 'name' must be a string", manifest_path
+                    continue
+                group_id = group_data.get("id")
+                group_name = group_data.get("name")
+                if not isinstance(group_id, str) or not group_id.strip():
+                    diagnostics.append(
+                        _models.CatalogDiagnostic(
+                            "warning",
+                            "Group 'id' must be a string",
+                            manifest.path,
+                        )
                     )
-                )
-                continue
-            if group_id in seen_ids:
-                diagnostics.append(
-                    _models.CatalogDiagnostic(
-                        "warning", f"Duplicate group id '{group_id}'", manifest_path
+                    continue
+                if not isinstance(group_name, str) or not group_name.strip():
+                    diagnostics.append(
+                        _models.CatalogDiagnostic(
+                            "warning",
+                            "Group 'name' must be a string",
+                            manifest.path,
+                        )
                     )
-                )
-                continue
-            seen_ids.add(group_id)
-            declared_order = group_data.get("order", order)
-            if not isinstance(declared_order, int):
-                declared_order = order
-            groups.append(
-                _models.CatalogGroup(
-                    stable_id=f"{bundle.bundle_id}:{group_id}",
+                    continue
+                if group_id in groups_by_id:
+                    first_group = groups_by_id[group_id]
+                    diagnostics.append(
+                        _models.CatalogDiagnostic(
+                            "warning",
+                            f"Global group id '{group_id}' is already declared by bundle "
+                            f"'{first_group.bundle_id}'; using the first declaration",
+                            manifest.path,
+                        )
+                    )
+                    continue
+                declared_order = group_data.get("order", order)
+                if not isinstance(declared_order, int):
+                    declared_order = order
+                groups_by_id[group_id] = _models.CatalogGroup(
+                    stable_id=group_id,
                     name=group_name.strip(),
                     order=declared_order,
-                    bundle_id=bundle.bundle_id,
+                    bundle_id=manifest.bundle.bundle_id,
+                )
+        return list(groups_by_id.values())
+
+    @staticmethod
+    def _parseSuppressions(
+        manifest: _ManifestRecord,
+        diagnostics: list[_models.CatalogDiagnostic],
+    ) -> tuple[set[str], set[str]]:
+        """Validate and return suppression identities from one manifest."""
+        suppression_data = manifest.data.get("suppress")
+        if suppression_data is None:
+            return set(), set()
+        if not isinstance(suppression_data, dict):
+            diagnostics.append(
+                _models.CatalogDiagnostic(
+                    "warning",
+                    "'suppress' must be an object",
+                    manifest.path,
                 )
             )
-        return groups
+            return set(), set()
+
+        allowed_fields = {"bundles", "applications"}
+        for field_name in sorted(set(suppression_data) - allowed_fields):
+            diagnostics.append(
+                _models.CatalogDiagnostic(
+                    "warning",
+                    f"Unknown suppress field '{field_name}'",
+                    manifest.path,
+                )
+            )
+
+        bundles = CatalogLoader._parseSuppressionArray(
+            manifest,
+            suppression_data,
+            "bundles",
+            diagnostics,
+        )
+        applications = CatalogLoader._parseSuppressionArray(
+            manifest,
+            suppression_data,
+            "applications",
+            diagnostics,
+        )
+        return bundles, applications
+
+    @staticmethod
+    def _parseSuppressionArray(
+        manifest: _ManifestRecord,
+        suppression_data: dict[str, Any],
+        field_name: str,
+        diagnostics: list[_models.CatalogDiagnostic],
+    ) -> set[str]:
+        """Validate one array below the suppression object."""
+        targets = suppression_data.get(field_name, [])
+        if not isinstance(targets, list):
+            diagnostics.append(
+                _models.CatalogDiagnostic(
+                    "warning",
+                    f"'suppress.{field_name}' must be an array",
+                    manifest.path,
+                )
+            )
+            return set()
+
+        valid_targets: set[str] = set()
+        for index, target in enumerate(targets):
+            if not isinstance(target, str) or not target.strip():
+                diagnostics.append(
+                    _models.CatalogDiagnostic(
+                        "warning",
+                        f"Suppress {field_name} entry {index + 1} must be a non-empty string",
+                        manifest.path,
+                    )
+                )
+                continue
+            valid_targets.add(target.strip())
+        return valid_targets
 
     def _parseApplication(
         self,
@@ -300,7 +415,7 @@ class CatalogLoader:
                     diagnostics, manifest_path, order, "'group' must be a string"
                 )
                 return None
-            group_id = f"{bundle.bundle_id}:{declared_group}"
+            group_id = declared_group
             if group_id not in group_ids:
                 self._addApplicationDiagnostic(
                     diagnostics,

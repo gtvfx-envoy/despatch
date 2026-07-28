@@ -13,13 +13,13 @@ def makeSnapshot():
         args=(),
         description="A test application",
         icon_path=None,
-        group_id="gt:test:tools",
+        group_id="tools",
         keywords=(),
         in_terminal=False,
         order=0,
         source_path=Path("despatch.json"),
     )
-    group = _models.CatalogGroup("gt:test:tools", "Tools", 0, "gt:test")
+    group = _models.CatalogGroup("tools", "Tools", 0, "gt:test")
     stack_state = _models.StackState(
         _models.StackMode.EXPLICIT,
         _models.StackSelection("studio", "studio", Path("studio.estack")),

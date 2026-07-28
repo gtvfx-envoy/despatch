@@ -7,7 +7,8 @@
 2. Select **Refresh**.
 3. Confirm the bundle contains `.envoy/despatch.json`.
 4. Confirm each manifest `command` exists in the active Stack.
-5. Check `platforms`, group IDs, JSON syntax, and the Despatch log.
+5. Check whether another manifest suppresses the bundle or application.
+6. Check `platforms`, global group IDs, JSON syntax, and the Despatch log.
 
 Run Envoy's diagnosis command to inspect Stack and bundle resolution:
 

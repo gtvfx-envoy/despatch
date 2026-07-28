@@ -57,7 +57,7 @@ class BundleRecord:
 
 @dataclass(frozen=True, slots=True)
 class CatalogGroup:
-    """A display group declared by a bundle manifest."""
+    """A Stack-wide display group declared by one bundle manifest."""
 
     stable_id: str
     name: str
