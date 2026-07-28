@@ -15,6 +15,16 @@ Enable **Keep launcher open after starting an app** when launching several
 tools in succession. Otherwise the launcher hides after Envoy reports a
 successful process start.
 
+## Stack refresh
+
+Choose how often Despatch checks an explicitly selected named or custom Stack
+for updates. The default is **5 minutes**, and the supported range is 1–60
+minutes. Longer intervals reduce filesystem traffic for users accessing Stack
+registries over a VPN or high-latency network.
+
+This setting does not affect the tray menu's manual **Refresh** command. Stack
+monitoring is always disabled while using Automatic resolution.
+
 ## Start at sign in
 
 On Windows, Despatch can register itself for the current user's login. This

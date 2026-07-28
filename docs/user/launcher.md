@@ -9,6 +9,11 @@ controls. To reload named Stacks, active bundles, manifests, favorites, and
 recent state without restarting Despatch, select **Refresh** from the tray
 icon's menu.
 
+An amber message below the toolbar appears when Despatch cannot check an
+explicit Stack for updates. This warning does not disable searching or
+launching: Despatch keeps using the last successfully loaded catalog and clears
+the warning when monitoring recovers.
+
 ### Search and keyboard controls
 
 | Action | Control |

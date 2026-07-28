@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 
 from despatch import _main_window, _models
@@ -155,5 +156,39 @@ def testLauncherDoesNotExposeRefreshControl(qapp):
 
     assert "Refresh catalog" not in tooltips
     assert not hasattr(window, "_refresh_button")
+    window.allowClose()
+    window.close()
+
+
+def testStackMonitorWarningIsIndependentFromCatalogStatus(qapp):
+    window = _main_window.MainWindow()
+
+    window.setReady("Catalog ready")
+    window.setStackMonitorWarning("Can’t check Stack updates", "network unavailable")
+
+    assert window._status_label.text() == "Catalog ready"
+    assert not window._stack_health_label.isHidden()
+    assert "Can’t check" in window._stack_health_label.text()
+    assert window._stack_health_label.toolTip() == "network unavailable"
+
+    window.setStackMonitorWarning()
+
+    assert window._stack_health_label.isHidden()
+    window.allowClose()
+    window.close()
+
+
+def testTransientStatusDoesNotClearNewerError(qapp):
+    window = _main_window.MainWindow()
+
+    window.showTransientStatus("Stack updated automatically", 0.01)
+    window.setError("Newer error")
+    deadline = time.monotonic() + 0.1
+    while time.monotonic() < deadline:
+        qapp.processEvents()
+        time.sleep(0.005)
+
+    assert window._status_label.text() == "Newer error"
+    assert not window._status_label.isHidden()
     window.allowClose()
     window.close()

@@ -203,6 +203,35 @@ def testPromptModeDoesNotDiscoverBundles(tmp_path):
     assert bundles == ()
 
 
+def testCustomStackFileStateUsesSelectedPathWithoutRegistryResolution(tmp_path):
+    envoy_module = makeEnvoyModule(tmp_path, {})
+    envoy_module.resolveNamedStack = lambda name: pytest.fail("Custom Stack should not resolve")
+    custom_path = tmp_path / "custom.estack"
+    custom_path.write_text("name: custom\nbundles: []\n", encoding="utf-8")
+    gateway = _envoy_gateway.EnvoyGateway(envoy_module)
+    selection = explicitState(custom_path.resolve(), str(custom_path.resolve()), True).selection
+
+    file_state = gateway.getStackFileState(selection)
+
+    assert file_state.path == custom_path.resolve()
+    assert file_state.size == custom_path.stat().st_size
+
+
+def testNamedStackFileStateReResolvesLatestPublication(tmp_path):
+    envoy_module = makeEnvoyModule(tmp_path)
+    newer_path = tmp_path / "studio-new.estack"
+    newer_path.write_text("name: studio\nbundles: []\nmetadata: updated\n", encoding="utf-8")
+    envoy_module.resolveNamedStack = lambda name: newer_path if name == "studio" else None
+    gateway = _envoy_gateway.EnvoyGateway(envoy_module)
+    selection = explicitState(envoy_module.stack_path.resolve()).selection
+
+    file_state = gateway.getStackFileState(selection)
+    original_state = gateway.getStackFileState(selection, resolve_registered=False)
+
+    assert file_state.path == newer_path.resolve()
+    assert original_state.path == envoy_module.stack_path.resolve()
+
+
 def testLaunchWorkerUsesEnvoyProcSubprocess(tmp_path):
     envoy_module = makeEnvoyModule(tmp_path)
     process = SimpleNamespace(pid=987)

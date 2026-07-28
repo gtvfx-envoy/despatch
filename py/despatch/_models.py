@@ -44,6 +44,16 @@ class StackState:
 
 
 @dataclass(frozen=True, slots=True)
+class StackFileState:
+    """Lightweight filesystem identity used to detect Stack updates."""
+
+    path: Path
+    size: int
+    modified_ns: int
+    changed_ns: int
+
+
+@dataclass(frozen=True, slots=True)
 class BundleRecord:
     """Bundle metadata required for catalog discovery."""
 

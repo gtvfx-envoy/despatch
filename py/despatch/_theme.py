@@ -105,14 +105,15 @@ def _baseStyle(
     QLabel#sectionHeader {{ color: {muted}; font-size: 8pt; font-weight: 600; }}
     QLabel#mutedLabel {{ color: {muted}; }}
     QLabel#errorLabel {{ color: {danger}; }}
-    QLineEdit, QComboBox {{
+    QLabel#warningLabel {{ color: {custom_stack}; }}
+    QLineEdit, QComboBox, QSpinBox {{
         background: {surface_alt};
         border: 1px solid {border};
         border-radius: 9px;
         padding: 8px 10px;
         selection-background-color: {accent};
     }}
-    QLineEdit:focus, QComboBox:focus {{ border-color: {accent}; }}
+    QLineEdit:focus, QComboBox:focus, QSpinBox:focus {{ border-color: {accent}; }}
     QComboBox[customStack="true"] {{ border-color: {custom_stack}; }}
     QComboBox::drop-down {{ border: 0; width: 24px; }}
     QPushButton, QToolButton {{

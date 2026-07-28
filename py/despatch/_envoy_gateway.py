@@ -172,6 +172,47 @@ class EnvoyGateway:
         except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
             raise EnvoyUnavailableError(f"Unable to load Envoy bundles: {error}") from error
 
+    def getStackFileState(
+        self,
+        selection: _models.StackSelection,
+        *,
+        resolve_registered: bool = True,
+    ) -> _models.StackFileState:
+        """Return lightweight metadata for an explicit Stack selection.
+
+        Args:
+            selection: Named or custom Stack selection to inspect.
+            resolve_registered: Re-resolve a named Stack's latest publication
+                before reading metadata.
+
+        Returns:
+            Filesystem identity suitable for change detection.
+
+        Raises:
+            EnvoyUnavailableError: If the Stack cannot be resolved or inspected.
+
+        """
+        stack_path = selection.path
+        try:
+            if resolve_registered and not selection.is_custom:
+                resolved_path = self._getEnvoyModule().resolveNamedStack(selection.persisted_value)
+                if resolved_path is None:
+                    raise ValueError(
+                        f"Named Stack '{selection.persisted_value}' could not be resolved"
+                    )
+                stack_path = Path(resolved_path)
+            file_stat = stack_path.stat()
+        except (AttributeError, OSError, RuntimeError, TypeError, ValueError) as error:
+            raise EnvoyUnavailableError(
+                f"Unable to check Envoy Stack '{selection.display_name}': {error}"
+            ) from error
+        return _models.StackFileState(
+            path=self._canonicalPath(stack_path),
+            size=file_stat.st_size,
+            modified_ns=file_stat.st_mtime_ns,
+            changed_ns=file_stat.st_ctime_ns,
+        )
+
     def spawnApplication(
         self,
         application: _models.ApplicationEntry,

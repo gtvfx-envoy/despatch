@@ -102,6 +102,7 @@ def makeSettingsDialog() -> _settings_dialog.SettingsDialog:
         autostart=True,
         global_shortcut_enabled=True,
         global_shortcut="Ctrl+Alt+Space",
+        stack_refresh_interval_seconds=300,
     )
     return _settings_dialog.SettingsDialog(
         settings,

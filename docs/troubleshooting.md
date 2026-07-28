@@ -36,6 +36,21 @@ resolution additionally honors `ENVOY_STACK` and `ENVOY_STACK_CONTEXT` through
 Envoy discovery. Inspect the current shell and process environment, then use
 `envoy --diagnose` to see the resolved source.
 
+## Stack update checks are unavailable
+
+An amber launcher warning means Despatch could not inspect the selected Stack
+or its named registry pointer. The launcher continues using the last successful
+catalog and retries in the background.
+
+- Confirm the Stack path or `ENVOY_STACK_ROOTS` location is reachable.
+- Check that VPN and network-share credentials are active.
+- Hover over the warning for the underlying path or filesystem error.
+- Use the tray menu's **Refresh** command after restoring connectivity if an
+  immediate retry is needed.
+
+The warning clears after a successful check. Automatic resolution never shows
+this warning because Stack-file monitoring is disabled in that mode.
+
 ## An application fails to start
 
 - Right-click it and choose **Copy Envoy command**, then run that command in a

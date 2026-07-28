@@ -24,6 +24,7 @@ or isolated launcher profiles.
   "keepOpenAfterLaunch": false,
   "recentApplications": ["gt:creative:krita"],
   "schemaVersion": 1,
+  "stackRefreshIntervalSeconds": 300,
   "theme": "dark",
   "windowGeometry": ""
 }
@@ -31,6 +32,17 @@ or isolated launcher profiles.
 
 Despatch writes this file atomically. Invalid or unsupported values fall back
 to defaults rather than preventing startup.
+
+`stackRefreshIntervalSeconds` must be a whole-minute value from `60` through
+`3600`. It defaults to `300`. Despatch applies this interval only to explicitly
+selected named and custom Stacks; Automatic resolution disables file
+monitoring.
+
+Each normal probe reads only filesystem metadata. Named Stacks first resolve
+their current registry `latest` pointer, while custom Stacks inspect their
+selected `.estack` path directly. Failed probes use exponential retry delays
+capped at five minutes, without ever retrying faster than the configured normal
+interval.
 
 ## Envoy user configuration
 

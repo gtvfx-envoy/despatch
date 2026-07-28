@@ -15,6 +15,7 @@ from Qt import QtCore, QtWidgets
 
 from . import (
     _catalog,
+    _constants,
     _documentation,
     _envoy_gateway,
     _error_dialog,
@@ -24,11 +25,22 @@ from . import (
     _settings,
     _settings_dialog,
     _single_instance,
+    _stack_monitor,
     _theme,
     _tray_icon,
 )
 
 _LOG = logging.getLogger("despatch.application")
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class _CatalogLoadResult:
+    """Complete catalog state plus its explicit Stack-file baseline."""
+
+    stacks: tuple[_models.NamedStack, ...]
+    stack_state: _models.StackState
+    snapshot: _models.CatalogSnapshot
+    stack_file_state: _models.StackFileState | None
 
 
 def _isDevModeEnabled() -> bool:
@@ -54,6 +66,11 @@ class DespatchApplication(QtCore.QObject):
         self._catalog_loader = _catalog.CatalogLoader(self._gateway)
         self._window = _main_window.MainWindow()
         self._tray_icon = _tray_icon.DespatchTrayIcon(self)
+        self._stack_monitor = _stack_monitor.StackMonitor(
+            self._gateway.getStackFileState,
+            self._settings.stack_refresh_interval_seconds,
+            parent=self,
+        )
         self._autostart = _platform.AutostartService(self._settings.settings_path.parent)
         self._global_shortcut = _platform.WindowsGlobalShortcut(application)
         self._executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="despatch")
@@ -72,6 +89,9 @@ class DespatchApplication(QtCore.QObject):
         self._automatic_resolution_requested = self._dev_mode
         self._launching: set[str] = set()
         self._error_dialogs: list[_error_dialog.ErrorDialog] = []
+        self._catalog_refresh_active = False
+        self._catalog_refresh_queued = False
+        self._state_generation = 0
         self._quitting = False
         self._connectSignals()
 
@@ -111,8 +131,7 @@ class DespatchApplication(QtCore.QObject):
 
     def refreshCatalog(self) -> None:
         """Refresh Stacks and application manifests asynchronously."""
-        self._window.setLoading("Refreshing Envoy catalog…")
-        self._submit(self._loadState, self._onStateLoaded, self._onCatalogError)
+        self._requestCatalogRefresh("manual")
 
     def quit(self) -> None:
         """Persist window state and stop the tray process."""
@@ -125,6 +144,7 @@ class DespatchApplication(QtCore.QObject):
         except (OSError, TypeError, ValueError) as error:
             _LOG.warning("Unable to save window geometry: %s", error)
         self._global_shortcut.unregister()
+        self._stack_monitor.stop()
         self._single_instance.close()
         self._tray_icon.hide()
         self._window.allowClose()
@@ -154,41 +174,142 @@ class DespatchApplication(QtCore.QObject):
         self._tray_icon.documentationRequested.connect(self._openDocumentation)
         self._tray_icon.settingsRequested.connect(self._showSettings)
         self._tray_icon.quitRequested.connect(self.quit)
+        self._stack_monitor.changeDetected.connect(self._onStackFileChanged)
+        self._stack_monitor.warningChanged.connect(self._onStackMonitorWarning)
 
-    def _loadState(
-        self,
-    ) -> tuple[
-        tuple[_models.NamedStack, ...],
-        _models.StackState,
-        _models.CatalogSnapshot,
-    ]:
+    def _requestCatalogRefresh(self, trigger: str) -> None:
+        """Start or coalesce a background catalog refresh.
+
+        Args:
+            trigger: ``manual`` for startup/tray refreshes or ``monitor`` for
+                an automatically detected Stack update.
+
+        """
+        if self._catalog_refresh_active:
+            if trigger != "monitor":
+                self._catalog_refresh_queued = True
+            return
+        self._catalog_refresh_active = True
+        request_generation = self._state_generation
+        if trigger == "monitor":
+            self._window.setReady("Stack update detected; refreshing…")
+        else:
+            self._stack_monitor.suspend()
+            self._window.setLoading("Refreshing Envoy catalog…")
+        self._submit(
+            self._loadState,
+            lambda result: self._onStateLoaded(result, trigger, request_generation),
+            lambda error: self._onCatalogRefreshError(error, trigger, request_generation),
+        )
+
+    def _loadState(self) -> _CatalogLoadResult:
         """Load all state required for an atomic UI refresh."""
         stacks = self._gateway.listStacks()
         stack_state = self._gateway.getStackState(self._automatic_resolution_requested)
+        stack_file_state = None
+        if stack_state.mode == _models.StackMode.EXPLICIT and stack_state.selection is not None:
+            try:
+                stack_file_state = self._gateway.getStackFileState(
+                    stack_state.selection,
+                    resolve_registered=False,
+                )
+            except _envoy_gateway.EnvoyUnavailableError as error:
+                _LOG.warning("Unable to capture initial Stack file state: %s", error)
         snapshot = self._catalog_loader.loadCatalog(stack_state)
-        return stacks, stack_state, snapshot
+        return _CatalogLoadResult(stacks, stack_state, snapshot, stack_file_state)
 
     def _onStateLoaded(
         self,
-        state: tuple[
-            tuple[_models.NamedStack, ...],
-            _models.StackState,
-            _models.CatalogSnapshot,
-        ],
+        result: _CatalogLoadResult,
+        trigger: str,
+        request_generation: int,
     ) -> None:
         """Atomically apply refreshed Envoy state."""
-        self._stacks, self._stack_state, self._snapshot = state
+        if request_generation != self._state_generation:
+            self._finishCatalogRefresh()
+            return
+        self._stacks = result.stacks
+        self._stack_state = result.stack_state
+        self._snapshot = result.snapshot
         self._applications = self._snapshot.applicationMap()
         self._window.setStacks(self._stacks, self._stack_state)
         self._refreshViews()
+        self._configureStackMonitor(result.stack_file_state)
         diagnostic_count = len(self._snapshot.diagnostics)
         if diagnostic_count:
             suffix = "issue" if diagnostic_count == 1 else "issues"
             self._window.setReady(f"Loaded with {diagnostic_count} manifest {suffix}")
             for diagnostic in self._snapshot.diagnostics:
                 _LOG.warning("%s: %s", diagnostic.source_path or "catalog", diagnostic.message)
+        elif trigger == "monitor":
+            self._window.showTransientStatus(
+                "Stack updated automatically",
+                _constants.STACK_UPDATE_STATUS_SECONDS,
+            )
         else:
             self._window.setReady()
+        self._finishCatalogRefresh()
+
+    def _onCatalogRefreshError(
+        self,
+        error: BaseException,
+        trigger: str,
+        request_generation: int,
+    ) -> None:
+        """Handle catalog failures according to their initiating surface."""
+        if request_generation != self._state_generation:
+            self._finishCatalogRefresh()
+            return
+        if trigger == "monitor":
+            message = str(error) or error.__class__.__name__
+            self._stack_monitor.resumeAfterReloadFailure(message)
+            self._window.setReady()
+            _LOG.error(
+                "Automatic Stack reingestion failed",
+                exc_info=(type(error), error, error.__traceback__),
+            )
+        else:
+            self._stack_monitor.resume()
+            self._onCatalogError(error)
+        self._finishCatalogRefresh()
+
+    def _finishCatalogRefresh(self) -> None:
+        """Release the refresh guard and run one coalesced manual refresh."""
+        self._catalog_refresh_active = False
+        if not self._catalog_refresh_queued:
+            return
+        self._catalog_refresh_queued = False
+        QtCore.QTimer.singleShot(0, self.refreshCatalog)
+
+    def _configureStackMonitor(
+        self,
+        stack_file_state: _models.StackFileState | None,
+    ) -> None:
+        """Enable monitoring only for an explicit named or custom Stack."""
+        selection = self._stack_state.selection
+        if self._stack_state.mode != _models.StackMode.EXPLICIT or selection is None:
+            self._stack_monitor.disable()
+            return
+        self._stack_monitor.configure(
+            selection,
+            stack_file_state,
+            self._settings.stack_refresh_interval_seconds,
+        )
+
+    def _onStackFileChanged(self, stack_file_state: _models.StackFileState) -> None:
+        """Reingest a confirmed changed Stack without blocking interaction."""
+        _LOG.info("Stack update detected at %s", stack_file_state.path)
+        self._requestCatalogRefresh("monitor")
+
+    def _onStackMonitorWarning(
+        self,
+        warning: _stack_monitor.StackMonitorWarning | None,
+    ) -> None:
+        """Reflect Stack-monitor health independently from catalog status."""
+        if warning is None:
+            self._window.setStackMonitorWarning()
+            return
+        self._window.setStackMonitorWarning(warning.message, warning.details)
 
     def _onCatalogError(self, error: BaseException) -> None:
         """Preserve prior state and surface a refresh failure."""
@@ -209,6 +330,8 @@ class DespatchApplication(QtCore.QObject):
         ):
             return
         label = stack_value or "Automatic resolution"
+        self._state_generation += 1
+        self._stack_monitor.suspend()
         self._window.setLoading(f"Switching to {label}…")
 
         def on_success(unused_result: Any) -> None:
@@ -243,6 +366,7 @@ class DespatchApplication(QtCore.QObject):
 
     def _onStackSwitchError(self, error: BaseException) -> None:
         """Restore the prior Stack selector state after a failed switch."""
+        self._stack_monitor.resume()
         self._window.setStacks(self._stacks, self._stack_state)
         self._refreshViews()
         self._onCatalogError(error)
@@ -312,6 +436,7 @@ class DespatchApplication(QtCore.QObject):
         old_autostart = self._settings.autostart
         old_shortcut_enabled = self._settings.global_shortcut_enabled
         old_shortcut = self._settings.global_shortcut
+        old_stack_refresh_interval = self._settings.stack_refresh_interval_seconds
         try:
             requested_autostart = bool(values["autostart"])
             if requested_autostart != old_autostart:
@@ -336,6 +461,8 @@ class DespatchApplication(QtCore.QObject):
             self._showErrorDialog("Settings could not be saved", str(error))
             return
         _theme.applyTheme(self._application, self._settings.theme)
+        if self._settings.stack_refresh_interval_seconds != old_stack_refresh_interval:
+            self._stack_monitor.setInterval(self._settings.stack_refresh_interval_seconds)
         self._refreshViews()
 
     def _openDocumentation(self) -> None:

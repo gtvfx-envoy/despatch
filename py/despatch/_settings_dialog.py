@@ -54,6 +54,15 @@ class SettingsDialog(QtWidgets.QDialog):
         self._keep_open_check.setChecked(settings.keep_open_after_launch)
         form_layout.addRow("", self._keep_open_check)
 
+        self._stack_refresh_spin = QtWidgets.QSpinBox()
+        self._stack_refresh_spin.setRange(1, 60)
+        self._stack_refresh_spin.setSuffix(" minutes")
+        self._stack_refresh_spin.setValue(settings.stack_refresh_interval_seconds // 60)
+        self._stack_refresh_spin.setToolTip(
+            "How often Despatch checks an explicitly selected Stack for updates"
+        )
+        form_layout.addRow("Stack refresh", self._stack_refresh_spin)
+
         self._autostart_check = QtWidgets.QCheckBox("Start when I sign in")
         self._autostart_check.setChecked(settings.autostart)
         self._autostart_check.setEnabled(autostart_supported)
@@ -104,4 +113,5 @@ class SettingsDialog(QtWidgets.QDialog):
             "autostart": self._autostart_check.isChecked(),
             "global_shortcut_enabled": self._shortcut_check.isChecked(),
             "global_shortcut": self._shortcut_input.keySequence().toString(),
+            "stack_refresh_interval_seconds": self._stack_refresh_spin.value() * 60,
         }

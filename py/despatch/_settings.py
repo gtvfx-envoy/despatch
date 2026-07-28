@@ -35,6 +35,7 @@ def _defaultData() -> dict[str, Any]:
         "autostart": False,
         "globalShortcutEnabled": False,
         "globalShortcut": _constants.DEFAULT_GLOBAL_SHORTCUT,
+        "stackRefreshIntervalSeconds": _constants.DEFAULT_STACK_REFRESH_INTERVAL_SECONDS,
         "windowGeometry": "",
     }
 
@@ -91,6 +92,11 @@ class SettingsStore:
     def global_shortcut(self) -> str:
         """Configured system-wide shortcut text."""
         return self._data["globalShortcut"]
+
+    @property
+    def stack_refresh_interval_seconds(self) -> int:
+        """Polling interval for explicitly selected Stack files."""
+        return self._data["stackRefreshIntervalSeconds"]
 
     @property
     def window_geometry(self) -> str:
@@ -152,6 +158,7 @@ class SettingsStore:
         autostart: bool,
         global_shortcut_enabled: bool,
         global_shortcut: str,
+        stack_refresh_interval_seconds: int | None = None,
     ) -> None:
         """Validate and persist settings edited by the user.
 
@@ -161,6 +168,8 @@ class SettingsStore:
             autostart: Start Despatch when the user logs in.
             global_shortcut_enabled: Register the configured global shortcut.
             global_shortcut: Portable shortcut text.
+            stack_refresh_interval_seconds: Whole-minute Stack polling interval.
+                Defaults to the current value when omitted.
 
         Raises:
             ValueError: If a supplied setting is invalid.
@@ -170,6 +179,16 @@ class SettingsStore:
             raise ValueError(f"Unsupported theme: {theme}")
         if global_shortcut_enabled and not global_shortcut.strip():
             raise ValueError("A global shortcut is required when the shortcut is enabled")
+        if stack_refresh_interval_seconds is None:
+            stack_refresh_interval_seconds = self.stack_refresh_interval_seconds
+        if (
+            isinstance(stack_refresh_interval_seconds, bool)
+            or not isinstance(stack_refresh_interval_seconds, int)
+            or stack_refresh_interval_seconds < _constants.MINIMUM_STACK_REFRESH_INTERVAL_SECONDS
+            or stack_refresh_interval_seconds > _constants.MAXIMUM_STACK_REFRESH_INTERVAL_SECONDS
+            or stack_refresh_interval_seconds % 60
+        ):
+            raise ValueError("Stack refresh interval must be a whole number from 1 to 60 minutes")
         self._data.update(
             {
                 "theme": theme,
@@ -177,6 +196,7 @@ class SettingsStore:
                 "autostart": bool(autostart),
                 "globalShortcutEnabled": bool(global_shortcut_enabled),
                 "globalShortcut": global_shortcut.strip(),
+                "stackRefreshIntervalSeconds": stack_refresh_interval_seconds,
             }
         )
         self.save()
@@ -251,6 +271,16 @@ class SettingsStore:
         shortcut = loaded.get("globalShortcut")
         if isinstance(shortcut, str) and shortcut.strip():
             self._data["globalShortcut"] = shortcut.strip()
+        refresh_interval = loaded.get("stackRefreshIntervalSeconds")
+        if (
+            isinstance(refresh_interval, int)
+            and not isinstance(refresh_interval, bool)
+            and _constants.MINIMUM_STACK_REFRESH_INTERVAL_SECONDS
+            <= refresh_interval
+            <= _constants.MAXIMUM_STACK_REFRESH_INTERVAL_SECONDS
+            and refresh_interval % 60 == 0
+        ):
+            self._data["stackRefreshIntervalSeconds"] = refresh_interval
         geometry = loaded.get("windowGeometry")
         if isinstance(geometry, str):
             self._data["windowGeometry"] = geometry

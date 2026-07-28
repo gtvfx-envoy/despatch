@@ -107,6 +107,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self._populating_stacks = False
         self._active_stack_index = 0
         self._custom_picker_index = -1
+        self._status_generation = 0
+        self._transient_status_generation: int | None = None
+        self._transient_status_timer = QtCore.QTimer(self)
+        self._transient_status_timer.setSingleShot(True)
+        self._transient_status_timer.timeout.connect(self._clearTransientStatus)
 
         window_flags = QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint  # type: ignore
         self.setWindowFlags(window_flags)
@@ -167,6 +172,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._settings_button.setToolTip("Settings")
         toolbar.addWidget(self._settings_button)
         content_layout.addLayout(toolbar)
+
+        self._stack_health_label = QtWidgets.QLabel()
+        self._stack_health_label.setObjectName("warningLabel")
+        self._stack_health_label.setWordWrap(True)
+        self._stack_health_label.setVisible(False)
+        content_layout.addWidget(self._stack_health_label)
 
         self._search_input = QtWidgets.QLineEdit()
         self._search_input.setPlaceholderText("Search applications…")
@@ -280,14 +291,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setLoading(self, message: str) -> None:
         """Show a loading state and disable mutation controls."""
+        self._status_generation += 1
         self._status_label.setObjectName("mutedLabel")
         self._status_label.setText(message)
+        self._status_label.setVisible(True)
         self._status_label.style().unpolish(self._status_label)
         self._status_label.style().polish(self._status_label)
         self._stack_combo.setEnabled(False)
 
     def setReady(self, message: str = "") -> None:
         """Restore interactive controls and display a status message."""
+        self._status_generation += 1
         self._stack_combo.setEnabled(True)
         self._status_label.setObjectName("mutedLabel")
         self._status_label.setText(message)
@@ -295,12 +309,42 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setError(self, message: str) -> None:
         """Display a recoverable catalog or launch error."""
+        self._status_generation += 1
         self._stack_combo.setEnabled(True)
         self._status_label.setObjectName("errorLabel")
         self._status_label.setText(message)
         self._status_label.setVisible(True)
         self._status_label.style().unpolish(self._status_label)
         self._status_label.style().polish(self._status_label)
+
+    def showTransientStatus(self, message: str, duration_seconds: float) -> None:
+        """Display a status message that cannot clear newer UI state.
+
+        Args:
+            message: Status text to display.
+            duration_seconds: Time before hiding the unchanged message.
+
+        """
+        self.setReady(message)
+        self._transient_status_generation = self._status_generation
+        self._transient_status_timer.start(max(1, round(duration_seconds * 1000)))
+
+    def setStackMonitorWarning(self, message: str = "", details: str = "") -> None:
+        """Show or clear the dedicated Stack-monitor health warning.
+
+        Args:
+            message: Concise visible warning, or an empty string to clear it.
+            details: Optional diagnostic tooltip text.
+
+        """
+        self._stack_health_label.setText(f"⚠ {message}" if message else "")
+        self._stack_health_label.setToolTip(details)
+        self._stack_health_label.setVisible(bool(message))
+
+    def _clearTransientStatus(self) -> None:
+        """Clear a transient status only when no newer status replaced it."""
+        if self._transient_status_generation == self._status_generation:
+            self.setReady()
 
     def showLauncher(self) -> None:
         """Show, raise, and focus the launcher."""
