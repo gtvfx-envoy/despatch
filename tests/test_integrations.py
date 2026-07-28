@@ -121,3 +121,17 @@ def testTrayMenuRequestsDocumentation(qapp):
     qapp.processEvents()
 
     assert received == [True]
+
+
+def testTrayMenuRequestsRefresh(qapp):
+    tray_icon = _tray_icon.DespatchTrayIcon()
+    received = []
+    tray_icon.refreshRequested.connect(lambda: received.append(True))
+    refresh_action = next(
+        action for action in tray_icon.contextMenu().actions() if action.text() == "Refresh"
+    )
+
+    refresh_action.trigger()
+    qapp.processEvents()
+
+    assert received == [True]

@@ -144,3 +144,16 @@ def testDocumentationButtonRequestsHelp(qapp):
     assert window._documentation_button.accessibleName() == "Documentation"
     window.allowClose()
     window.close()
+
+
+def testLauncherDoesNotExposeRefreshControl(qapp):
+    window = _main_window.MainWindow()
+
+    tooltips = {
+        button.toolTip() for button in window.findChildren(_main_window.QtWidgets.QToolButton)
+    }
+
+    assert "Refresh catalog" not in tooltips
+    assert not hasattr(window, "_refresh_button")
+    window.allowClose()
+    window.close()

@@ -93,7 +93,6 @@ class MainWindow(QtWidgets.QMainWindow):
     copyRequested = QtCore.Signal(str)
     stackRequested = QtCore.Signal(object)
     customStackRequested = QtCore.Signal()
-    refreshRequested = QtCore.Signal()
     documentationRequested = QtCore.Signal()
     settingsRequested = QtCore.Signal()
 
@@ -157,11 +156,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._stack_combo.setToolTip("Active Envoy Stack")
         toolbar.addWidget(self._stack_combo, 1)
 
-        self._refresh_button = QtWidgets.QToolButton()
-        self._refresh_button.setText("↻")
-        self._refresh_button.setToolTip("Refresh catalog")
-        toolbar.addWidget(self._refresh_button)
-
         self._documentation_button = QtWidgets.QToolButton()
         self._documentation_button.setText("?")
         self._documentation_button.setToolTip("Documentation")
@@ -200,7 +194,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """Connect all UI events."""
         self._title_bar.closeRequested.connect(self.hide)
         self._title_bar.minimizeRequested.connect(self.showMinimized)
-        self._refresh_button.clicked.connect(self.refreshRequested)
         self._documentation_button.clicked.connect(self.documentationRequested)
         self._settings_button.clicked.connect(self.settingsRequested)
         self._stack_combo.currentIndexChanged.connect(self._onStackChanged)
@@ -292,12 +285,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self._status_label.style().unpolish(self._status_label)
         self._status_label.style().polish(self._status_label)
         self._stack_combo.setEnabled(False)
-        self._refresh_button.setEnabled(False)
 
     def setReady(self, message: str = "") -> None:
         """Restore interactive controls and display a status message."""
         self._stack_combo.setEnabled(True)
-        self._refresh_button.setEnabled(True)
         self._status_label.setObjectName("mutedLabel")
         self._status_label.setText(message)
         self._status_label.setVisible(bool(message))
@@ -305,7 +296,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def setError(self, message: str) -> None:
         """Display a recoverable catalog or launch error."""
         self._stack_combo.setEnabled(True)
-        self._refresh_button.setEnabled(True)
         self._status_label.setObjectName("errorLabel")
         self._status_label.setText(message)
         self._status_label.setVisible(True)

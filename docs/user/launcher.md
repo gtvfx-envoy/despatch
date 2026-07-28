@@ -4,9 +4,10 @@
 
 ![Annotated Despatch launcher](../assets/launcher.png)
 
-The toolbar contains the active Stack, **Refresh**, **Documentation**, and
-**Settings** controls. Refresh reloads named Stacks, active bundles, manifests,
-favorites, and recent state without restarting Despatch.
+The toolbar contains the active Stack, **Documentation**, and **Settings**
+controls. To reload named Stacks, active bundles, manifests, favorites, and
+recent state without restarting Despatch, select **Refresh** from the tray
+icon's menu.
 
 ### Search and keyboard controls
 

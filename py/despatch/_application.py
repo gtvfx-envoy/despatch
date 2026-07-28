@@ -143,7 +143,6 @@ class DespatchApplication(QtCore.QObject):
         self._window.copyRequested.connect(self._copyCommand)
         self._window.stackRequested.connect(self._switchStack)
         self._window.customStackRequested.connect(self._chooseCustomStack)
-        self._window.refreshRequested.connect(self.refreshCatalog)
         self._window.documentationRequested.connect(self._openDocumentation)
         self._window.settingsRequested.connect(self._showSettings)
 
