@@ -19,6 +19,7 @@ despatch --docs
 Despatch targets the studio's Envoy-provided Python 3.11.9 environment. That
 environment supplies the `Qt` compatibility shim and its selected Qt binding.
 Application code imports from `Qt`; it does not import a binding directly.
+Despatch requires Envoy 0.5.1 or newer for the shared config-root API.
 
 Before running or developing Despatch, verify the environment:
 

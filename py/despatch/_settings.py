@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import os
 import tempfile
@@ -12,16 +13,45 @@ from . import _constants
 
 
 def getDefaultSettingsPath() -> Path:
-    """Return the platform-specific Despatch settings path.
+    """Return the effective Despatch settings path.
 
     Returns:
         Default settings JSON path.
 
     """
-    app_data = os.environ.get("APPDATA")
-    if app_data:
-        return Path(app_data) / _constants.PRODUCT_NAME / "settings.json"
-    return Path.home() / ".config" / "despatch" / "settings.json"
+    despatch_root = _nonEmptyEnvironmentPath("DESPATCH_CONFIG_ROOT")
+    if despatch_root is not None:
+        return despatch_root / "settings.json"
+    return _getEnvoyConfigRoot() / "despatch" / "settings.json"
+
+
+def _getEnvoyConfigRoot() -> Path:
+    """Return Envoy's shared config root with a startup-safe fallback.
+
+    Returns:
+        Effective Envoy config root.
+
+    """
+    try:
+        envoy_module = importlib.import_module("envoy")
+        return Path(envoy_module.getConfigRoot())
+    except (AttributeError, ImportError, OSError, RuntimeError, TypeError, ValueError):
+        config_root = _nonEmptyEnvironmentPath("ENVOY_CONFIG_ROOT")
+        return config_root if config_root is not None else Path.home() / ".envoy"
+
+
+def _nonEmptyEnvironmentPath(name: str) -> Path | None:
+    """Return a non-empty environment path.
+
+    Args:
+        name: Environment variable name.
+
+    Returns:
+        Configured path, or None when the variable is unset or blank.
+
+    """
+    value = os.environ.get(name)
+    return Path(value) if value and value.strip() else None
 
 
 def _defaultData() -> dict[str, Any]:

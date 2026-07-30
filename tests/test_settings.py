@@ -5,6 +5,55 @@ import pytest
 from despatch import _settings, _settings_dialog
 
 
+def testDefaultSettingsPathUsesEnvoyConfigRoot(monkeypatch, tmp_path):
+    config_root = tmp_path / "envoy-root"
+    monkeypatch.delenv("DESPATCH_CONFIG_ROOT", raising=False)
+    monkeypatch.setattr(_settings, "_getEnvoyConfigRoot", lambda: config_root)
+
+    assert _settings.getDefaultSettingsPath() == config_root / "despatch" / "settings.json"
+
+
+def testDespatchConfigRootOverridesEnvoyRoot(monkeypatch, tmp_path):
+    despatch_root = tmp_path / "despatch-root"
+    monkeypatch.setenv("DESPATCH_CONFIG_ROOT", str(despatch_root))
+    monkeypatch.setattr(
+        _settings,
+        "_getEnvoyConfigRoot",
+        lambda: pytest.fail("Envoy root should not be queried for a Despatch override"),
+    )
+
+    assert _settings.getDefaultSettingsPath() == despatch_root / "settings.json"
+
+
+def testBlankDespatchConfigRootIsIgnored(monkeypatch, tmp_path):
+    config_root = tmp_path / "envoy-root"
+    monkeypatch.setenv("DESPATCH_CONFIG_ROOT", "   ")
+    monkeypatch.setattr(_settings, "_getEnvoyConfigRoot", lambda: config_root)
+
+    assert _settings.getDefaultSettingsPath() == config_root / "despatch" / "settings.json"
+
+
+def testEnvoyConfigRootFallbackUsesEnvironment(monkeypatch, tmp_path):
+    config_root = tmp_path / "fallback-root"
+
+    def raiseImportError(module_name):
+        raise ImportError(module_name)
+
+    monkeypatch.setenv("ENVOY_CONFIG_ROOT", str(config_root))
+    monkeypatch.setattr(_settings.importlib, "import_module", raiseImportError)
+
+    assert _settings._getEnvoyConfigRoot() == config_root
+
+
+def testExplicitSettingsPathOverridesConfigRoots(monkeypatch, tmp_path):
+    explicit_path = tmp_path / "explicit" / "settings.json"
+    monkeypatch.setenv("DESPATCH_CONFIG_ROOT", str(tmp_path / "despatch-root"))
+
+    store = _settings.SettingsStore(explicit_path)
+
+    assert store.settings_path == explicit_path
+
+
 def testSettingsRoundTrip(tmp_path):
     settings_path = tmp_path / "settings.json"
     store = _settings.SettingsStore(settings_path)

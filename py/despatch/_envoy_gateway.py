@@ -48,6 +48,7 @@ class EnvoyGateway:
         required_names = (
             "Stack",
             "discoverBundlesAuto",
+            "getConfigRoot",
             "isStackName",
             "listNamedStacks",
             "loadUserConfig",

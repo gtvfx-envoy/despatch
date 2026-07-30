@@ -41,6 +41,7 @@ def makeEnvoyModule(tmp_path, user_values=None):
         __version__="test",
         Stack=FakeStack,
         discoverBundlesAuto=lambda: [],
+        getConfigRoot=lambda: tmp_path / ".envoy",
         isStackName=lambda value: (
             "/" not in value
             and "\\" not in value
@@ -95,6 +96,16 @@ def testPreflightRequiresStackApi(tmp_path):
 
     del envoy_module.Stack
     with pytest.raises(_envoy_gateway.EnvoyUnavailableError, match="Stack"):
+        gateway.preflight()
+
+
+def testPreflightRequiresConfigRootApi(tmp_path):
+    envoy_module = makeEnvoyModule(tmp_path)
+    gateway = _envoy_gateway.EnvoyGateway(envoy_module)
+
+    del envoy_module.getConfigRoot
+
+    with pytest.raises(_envoy_gateway.EnvoyUnavailableError, match="getConfigRoot"):
         gateway.preflight()
 
 

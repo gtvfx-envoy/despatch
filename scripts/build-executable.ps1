@@ -101,6 +101,8 @@ try {
     Invoke-BuildPython @(
         "-c",
         "import PyInstaller, PySide6, Qt, envoy, despatch, properdocs; " +
+            "assert hasattr(envoy, 'getConfigRoot'), " +
+            "'Envoy must expose getConfigRoot()'; " +
             "print('Freezing with', PyInstaller.__version__, Qt.__binding__)"
     )
 

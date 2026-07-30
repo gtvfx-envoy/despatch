@@ -9,7 +9,7 @@ on:
       envoy_release:
         description: Envoy release to embed in the executable
         required: true
-        default: v0.5.0
+        default: v0.5.1
         type: string
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
     name: Build Windows executable
     runs-on: [self-hosted, X64, Windows, synology]
     env:
-      ENVOY_RELEASE: ${{ inputs.envoy_release || 'v0.5.0' }}
+      ENVOY_RELEASE: ${{ inputs.envoy_release || 'v0.5.1' }}
 
     steps:
       - name: Checkout
