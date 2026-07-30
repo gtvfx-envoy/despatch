@@ -38,8 +38,8 @@ executable = [
     "Qt.py==2.0.5",
 ]
 docs = [
-    "properdocs",
-    "mkdocs-material",
+    "properdocs==1.6.7",
+    "mkdocs-material==9.7.6",
 ]
 
 [tool.setuptools]

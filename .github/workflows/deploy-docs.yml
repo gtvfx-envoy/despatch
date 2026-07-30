@@ -40,7 +40,7 @@ jobs:
           enablement: true
 
       - name: Build site
-        run: python -m properdocs build --clean
+        run: python -m properdocs build --clean --strict
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

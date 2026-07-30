@@ -1,0 +1,54 @@
+name: Check Docs
+
+on:
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 13 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Build and validate ProperDocs site
+    if: >-
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64, synology]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.9'
+
+      - name: Install documentation dependencies
+        run: pip install '.[docs]'
+
+      - name: Build site strictly
+        run: python -m properdocs build --clean --strict
+
+      - name: Check external links
+        if: github.event_name != 'pull_request'
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --max-retries 3
+            --timeout 20
+            './**/*.html'
+            '../README.md'
+          fail: true
+          failIfEmpty: true
+          format: markdown
+          jobSummary: true
+          lycheeVersion: v0.24.1
+          workingDirectory: site
