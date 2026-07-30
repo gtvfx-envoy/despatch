@@ -1,0 +1,136 @@
+from pathlib import Path
+from types import SimpleNamespace
+
+from despatch import _application, _models
+
+
+def testDevModeRequiresExactTrimmedOne(monkeypatch):
+    monkeypatch.delenv("ENVOY_DEV_MODE", raising=False)
+    assert _application._isDevModeEnabled() is False
+
+    monkeypatch.setenv("ENVOY_DEV_MODE", " 1 ")
+    assert _application._isDevModeEnabled() is True
+
+    monkeypatch.setenv("ENVOY_DEV_MODE", "true")
+    assert _application._isDevModeEnabled() is False
+
+
+def testManualAutomaticSelectionLastsForCurrentSession():
+    operations = []
+    refreshes = []
+    gateway = SimpleNamespace(clearStack=lambda: operations.append("clear"))
+    coordinator = SimpleNamespace(
+        _stack_state=_models.StackState(_models.StackMode.PROMPT),
+        _window=SimpleNamespace(setLoading=lambda message: None),
+        _gateway=gateway,
+        _dev_mode=False,
+        _automatic_resolution_requested=False,
+        _state_generation=0,
+        _stack_monitor=SimpleNamespace(suspend=lambda: None),
+        _onStackSwitchError=lambda error: None,
+        refreshCatalog=lambda: refreshes.append(True),
+    )
+    coordinator._submit = lambda operation, on_success, on_error: on_success(operation())
+
+    _application.DespatchApplication._switchStack(coordinator, None)
+
+    assert operations == ["clear"]
+    assert coordinator._automatic_resolution_requested is True
+    assert refreshes == [True]
+
+
+def testExplicitSelectionRestoresConfiguredDefault():
+    operations = []
+    gateway = SimpleNamespace(switchStack=lambda value: operations.append(value))
+    coordinator = SimpleNamespace(
+        _stack_state=_models.StackState(_models.StackMode.AUTOMATIC),
+        _window=SimpleNamespace(setLoading=lambda message: None),
+        _gateway=gateway,
+        _dev_mode=False,
+        _automatic_resolution_requested=True,
+        _state_generation=0,
+        _stack_monitor=SimpleNamespace(suspend=lambda: None),
+        _onStackSwitchError=lambda error: None,
+        refreshCatalog=lambda: None,
+    )
+    coordinator._submit = lambda operation, on_success, on_error: on_success(operation())
+
+    _application.DespatchApplication._switchStack(coordinator, "studio")
+
+    assert operations == ["studio"]
+    assert coordinator._automatic_resolution_requested is False
+
+
+def testCancelingCustomStackPickerPreservesSelection(monkeypatch):
+    switch_requests = []
+    coordinator = SimpleNamespace(
+        _stack_state=_models.StackState(_models.StackMode.PROMPT),
+        _window=None,
+        _switchStack=switch_requests.append,
+    )
+    monkeypatch.setattr(
+        _application.QtWidgets.QFileDialog,
+        "getOpenFileName",
+        lambda *args: ("", "Envoy Stack (*.estack)"),
+    )
+
+    _application.DespatchApplication._chooseCustomStack(coordinator)
+
+    assert switch_requests == []
+
+
+def testAutomaticStateDisablesStackMonitoring():
+    calls = []
+    coordinator = SimpleNamespace(
+        _stack_state=_models.StackState(_models.StackMode.AUTOMATIC),
+        _stack_monitor=SimpleNamespace(disable=lambda: calls.append("disabled")),
+    )
+
+    _application.DespatchApplication._configureStackMonitor(coordinator, None)
+
+    assert calls == ["disabled"]
+
+
+def testExplicitStateConfiguresStackMonitoring():
+    calls = []
+    selection = _models.StackSelection("studio", "studio", Path("studio.estack"))
+    file_state = _models.StackFileState(Path("studio.estack"), 12, 34, 56)
+    coordinator = SimpleNamespace(
+        _stack_state=_models.StackState(_models.StackMode.EXPLICIT, selection),
+        _stack_monitor=SimpleNamespace(
+            configure=lambda *arguments: calls.append(arguments),
+            disable=lambda: None,
+        ),
+        _settings=SimpleNamespace(stack_refresh_interval_seconds=300),
+    )
+
+    _application.DespatchApplication._configureStackMonitor(coordinator, file_state)
+
+    assert calls == [(selection, file_state, 300)]
+
+
+def testAutomaticReloadFailureUsesInlineHealthState():
+    events = []
+    coordinator = SimpleNamespace(
+        _state_generation=4,
+        _stack_monitor=SimpleNamespace(
+            resumeAfterReloadFailure=lambda message: events.append(("warning", message))
+        ),
+        _window=SimpleNamespace(setReady=lambda: events.append(("ready", None))),
+        _onCatalogError=lambda error: events.append(("catalog-error", error)),
+        _finishCatalogRefresh=lambda: events.append(("finished", None)),
+    )
+    error = RuntimeError("invalid updated Stack")
+
+    _application.DespatchApplication._onCatalogRefreshError(
+        coordinator,
+        error,
+        "monitor",
+        4,
+    )
+
+    assert events == [
+        ("warning", "invalid updated Stack"),
+        ("ready", None),
+        ("finished", None),
+    ]

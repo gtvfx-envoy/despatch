@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "envoy-despatch"
+version = "0.1.0"
+description = "System tray application launcher for the Envoy runtime"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11,<3.12"
+authors = [
+    { name = "GTVFX Contrib", email = "dev@gtvfx-contrib.github.io" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Desktop Environment",
+]
+
+[project.scripts]
+despatch = "despatch.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+    "build>=1.2",
+    "pytest>=8.0",
+    "ruff>=0.8",
+]
+executable = [
+    "PyInstaller==6.21.0",
+    "PySide6==6.11.1",
+    "Qt.py==2.0.5",
+]
+docs = [
+    "properdocs==1.6.7",
+    "mkdocs-material==9.7.6",
+]
+
+[tool.setuptools]
+packages = ["despatch", "despatch.resources"]
+
+[tool.setuptools.package-dir]
+despatch = "py/despatch"
+"despatch.resources" = "resources"
+
+[tool.setuptools.package-data]
+"despatch.resources" = ["icons/*"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["py", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "D", "UP", "B", "SIM"]
+ignore = ["N802", "N815"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.ruff.format]
+quote-style = "preserve"

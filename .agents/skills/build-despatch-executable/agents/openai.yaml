@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Despatch Executable"
+  short_description: "Build and verify the Windows executable"
+  default_prompt: "Use $build-despatch-executable to build and validate the Windows release executable."

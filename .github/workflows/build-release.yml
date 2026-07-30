@@ -1,0 +1,142 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      envoy_release:
+        description: Envoy release to embed in the executable
+        required: true
+        default: v0.5.0
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows executable
+    runs-on: [self-hosted, X64, Windows, synology]
+    env:
+      ENVOY_RELEASE: ${{ inputs.envoy_release || 'v0.5.0' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11.9'
+
+      - name: Download Envoy Python wheel
+        shell: pwsh
+        run: |
+          $headers = @{
+              Accept = 'application/vnd.github+json'
+              'User-Agent' = 'gt-despatch-release'
+              'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          $releaseTag = [Uri]::EscapeDataString($env:ENVOY_RELEASE)
+          $releaseUri = "https://api.github.com/repos/gtvfx-contrib/gt-envoy/releases/tags/$releaseTag"
+          $release = Invoke-RestMethod -Uri $releaseUri -Headers $headers
+          $assets = @($release.assets | Where-Object {
+              $_.name -match '^envoy-.+-cp310-abi3-win_amd64\.whl$'
+          })
+          if ($assets.Count -ne 1) {
+              throw "Expected one Windows Envoy wheel in release '$env:ENVOY_RELEASE'; found $($assets.Count)."
+          }
+
+          $dependencyDirectory = Join-Path $env:RUNNER_TEMP 'despatch-dependencies'
+          New-Item -ItemType Directory -Path $dependencyDirectory -Force | Out-Null
+          $wheelPath = Join-Path $dependencyDirectory $assets[0].name
+          Invoke-WebRequest -Uri $assets[0].browser_download_url -OutFile $wheelPath
+          "ENVOY_WHEEL=$wheelPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install $env:ENVOY_WHEEL '.[executable,docs]'
+
+      - name: Build executable
+        shell: pwsh
+        run: |
+          $python = (Get-Command python -ErrorAction Stop).Source
+          .\scripts\build-executable.ps1 -PythonExecutable $python -SkipToolInstall
+
+      - name: Verify executable starts
+        shell: pwsh
+        run: |
+          $process = Start-Process `
+              -FilePath .\dist\despatch.exe `
+              -ArgumentList '--version' `
+              -Wait `
+              -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "despatch.exe --version failed with exit code $($process.ExitCode)."
+          }
+
+      - name: Verify bundled documentation
+        shell: pwsh
+        run: |
+          $readyPath = Join-Path $env:RUNNER_TEMP 'despatch-docs-ready.json'
+          function Stop-ProcessTree {
+            param([int]$ProcessId)
+            $childIds = @(
+              Get-CimInstance Win32_Process -Filter "ParentProcessId = $ProcessId" |
+                Select-Object -ExpandProperty ProcessId
+            )
+            foreach ($childId in $childIds) {
+              Stop-ProcessTree -ProcessId $childId
+            }
+            Stop-Process -Id $ProcessId -Force -ErrorAction SilentlyContinue
+          }
+          Remove-Item -LiteralPath $readyPath -Force -ErrorAction SilentlyContinue
+          $process = Start-Process `
+              -FilePath .\dist\despatch.exe `
+              -ArgumentList '--docs-server', $readyPath `
+              -PassThru
+          try {
+            $deadline = [DateTime]::UtcNow.AddSeconds(30)
+            while (-not (Test-Path -LiteralPath $readyPath)) {
+              if ($process.HasExited) {
+                throw "Documentation helper exited with code $($process.ExitCode)."
+              }
+              if ([DateTime]::UtcNow -ge $deadline) {
+                throw 'Timed out waiting for the documentation helper.'
+              }
+              Start-Sleep -Milliseconds 100
+            }
+            $ready = Get-Content -LiteralPath $readyPath -Raw | ConvertFrom-Json
+            if ($ready.error) {
+              throw "Documentation helper failed: $($ready.error)"
+            }
+            $response = Invoke-WebRequest -Uri $ready.url -UseBasicParsing
+            if ($response.StatusCode -ne 200 -or $response.Content -notmatch '<title>Despatch') {
+              throw 'The bundled documentation home page is invalid.'
+            }
+            $asset = Invoke-WebRequest -Uri "$($ready.url)search/search_index.json" -UseBasicParsing
+            if ($asset.StatusCode -ne 200) {
+              throw 'The bundled documentation search index is unavailable.'
+            }
+          } finally {
+            Stop-ProcessTree -ProcessId $process.Id
+            Remove-Item -LiteralPath $readyPath -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: despatch-${{ github.ref_name }}-windows-x64
+          path: dist/despatch.exe
+          if-no-files-found: error
+
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/despatch.exe
+          fail_on_unmatched_files: true

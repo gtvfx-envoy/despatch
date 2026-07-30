@@ -1,0 +1,4 @@
+name: workstation
+bundles:
+  - path: C:/studio/bundles/globals
+  - path: C:/studio/bundles/creative-tools

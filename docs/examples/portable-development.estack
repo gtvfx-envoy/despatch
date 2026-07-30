@@ -1,0 +1,15 @@
+name: development
+namespace: studio:development
+metadata:
+  owner: developer-experience
+  purpose: local-development
+bundles:
+  - path: ${STUDIO_BUNDLE_ROOT}/globals
+    metadata:
+      role: baseline
+  - path: ../bundles/project-tools
+    metadata:
+      role: checkout
+  - path: ~/envoy-bundles/user-overrides
+    metadata:
+      role: personal

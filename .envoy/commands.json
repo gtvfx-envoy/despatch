@@ -1,0 +1,8 @@
+{
+    "despatch": {
+        "environment": [
+            "python"
+        ],
+        "alias": ["pythonw", "-m", "despatch"]
+    }
+}
