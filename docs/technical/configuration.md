@@ -90,8 +90,8 @@ When Despatch is in Automatic mode, `discoverBundlesAuto()` applies
 falling back to `ENVOY_BNDL_ROOTS`.
 
 For the full Envoy environment and precedence reference, see
-[Envoy user configuration](https://gtvfx-contrib.github.io/gt-envoy/user-config/)
-and [bundle discovery](https://gtvfx-contrib.github.io/gt-envoy/bundle-discovery/).
+[Envoy user configuration](https://gtvfx-envoy.github.io/envoy/user-config/)
+and [bundle discovery](https://gtvfx-envoy.github.io/envoy/bundle-discovery/).
 
 ## Logging
 

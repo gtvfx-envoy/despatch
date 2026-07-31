@@ -176,4 +176,4 @@ containers, arrays, entries, and unknown fields while retaining valid sibling
 directives and applications.
 
 Bundle command and environment definitions remain Envoy configuration. See
-[Envoy Core Concepts](https://gtvfx-contrib.github.io/gt-envoy/concepts/).
+[Envoy Core Concepts](https://gtvfx-envoy.github.io/envoy/concepts/).

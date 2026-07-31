@@ -50,4 +50,4 @@ surface for a selected Envoy **Stack**, which is an ordered collection of
     **Documentation** from the tray menu.
 
 For Envoy concepts beyond what Despatch needs, see the
-[complete Envoy documentation](https://gtvfx-contrib.github.io/gt-envoy/).
+[complete Envoy documentation](https://gtvfx-envoy.github.io/envoy/).

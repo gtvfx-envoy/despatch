@@ -68,4 +68,4 @@ are an error.
 
 See [Examples](../examples.md) for annotated files and downloads. Publishing
 and registry maintenance are covered by the
-[Envoy user configuration guide](https://gtvfx-contrib.github.io/gt-envoy/user-config/).
+[Envoy user configuration guide](https://gtvfx-envoy.github.io/envoy/user-config/).

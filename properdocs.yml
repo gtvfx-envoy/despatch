@@ -1,8 +1,8 @@
 site_name: Despatch
-site_url: https://gtvfx-contrib.github.io/gt-despatch/
+site_url: https://gtvfx-envoy.github.io/despatch/
 site_description: Application launcher for Envoy-managed runtime Stacks.
-repo_name: gtvfx-contrib/gt-despatch
-repo_url: https://github.com/gtvfx-contrib/gt-despatch
+repo_name: gtvfx-envoy/despatch
+repo_url: https://github.com/gtvfx-envoy/despatch
 edit_uri: edit/main/docs/
 
 theme:

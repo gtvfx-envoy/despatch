@@ -32,7 +32,7 @@ jobs:
           app-id: ${{ secrets.RELEASE_AUTOMATION_APP_ID }}
           private-key: ${{ secrets.RELEASE_AUTOMATION_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: gt-despatch,gt-envoy
+          repositories: despatch,envoy
 
       - name: Checkout main
         uses: actions/checkout@v7
@@ -47,7 +47,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           ENVOY_TAG: ${{ inputs.envoy_tag }}
         run: |
-          $assetCount = gh api "repos/gtvfx-contrib/gt-envoy/releases/tags/$env:ENVOY_TAG" `
+          $assetCount = gh api "repos/gtvfx-envoy/envoy/releases/tags/$env:ENVOY_TAG" `
               --jq '[.assets[] | select(.name | test("^envoy-.+-cp310-abi3-win_amd64\\.whl$"))] | length'
           if ([int]$assetCount -ne 1) {
             throw "Expected exactly one Windows Envoy wheel; found $assetCount."

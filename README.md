@@ -1,13 +1,13 @@
 # Despatch
 
 Despatch is a Windows-first system tray launcher for applications managed by
-[Envoy](https://github.com/gtvfx-contrib/gt-envoy). It discovers explicitly
+[Envoy](https://github.com/gtvfx-envoy/envoy). It discovers explicitly
 declared application metadata from active Envoy bundles, presents a fast
 searchable catalog, and always dispatches commands through Envoy's concatenated
 environment.
 
 Full user and implementer documentation is available at
-[gtvfx-contrib.github.io/gt-despatch](https://gtvfx-contrib.github.io/gt-despatch/).
+[gtvfx-envoy.github.io/despatch](https://gtvfx-envoy.github.io/despatch/).
 The standalone executable also includes the site for offline use:
 
 ```powershell

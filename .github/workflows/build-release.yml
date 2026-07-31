@@ -37,11 +37,11 @@ jobs:
         run: |
           $headers = @{
               Accept = 'application/vnd.github+json'
-              'User-Agent' = 'gt-despatch-release'
+              'User-Agent' = 'despatch-release'
               'X-GitHub-Api-Version' = '2022-11-28'
           }
           $releaseTag = [Uri]::EscapeDataString($env:ENVOY_RELEASE)
-          $releaseUri = "https://api.github.com/repos/gtvfx-contrib/gt-envoy/releases/tags/$releaseTag"
+          $releaseUri = "https://api.github.com/repos/gtvfx-envoy/envoy/releases/tags/$releaseTag"
           $release = Invoke-RestMethod -Uri $releaseUri -Headers $headers
           $assets = @($release.assets | Where-Object {
               $_.name -match '^envoy-.+-cp310-abi3-win_amd64\.whl$'

@@ -10,7 +10,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11,<3.12"
 authors = [
-    { name = "GTVFX Contrib", email = "dev@gtvfx-contrib.github.io" },
+    { name = "GTVFX Envoy", email = "dev@gtvfx-envoy.github.io" },
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",

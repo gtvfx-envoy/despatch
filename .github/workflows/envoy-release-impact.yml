@@ -32,7 +32,7 @@ jobs:
       - name: Checkout candidate Envoy release
         uses: actions/checkout@v7
         with:
-          repository: gtvfx-contrib/gt-envoy
+          repository: gtvfx-envoy/envoy
           ref: ${{ env.ENVOY_TAG }}
           fetch-depth: 0
           path: downstream/envoy
@@ -49,7 +49,7 @@ jobs:
           PAYLOAD_COMMIT: ${{ github.event.client_payload.envoy_commit }}
           SCHEMA_VERSION: ${{ github.event.client_payload.schema_version }}
         run: |
-          gh api "repos/gtvfx-contrib/gt-envoy/releases/tags/$ENVOY_TAG" --jq .tag_name
+          gh api "repos/gtvfx-envoy/envoy/releases/tags/$ENVOY_TAG" --jq .tag_name
           if [[ "${{ github.event_name }}" == repository_dispatch ]]; then
             test "$SCHEMA_VERSION" = 1
             test "$(git -C downstream/envoy rev-parse HEAD)" = "$PAYLOAD_COMMIT"
@@ -95,12 +95,12 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $headers = @{
               Accept = 'application/vnd.github+json'
-              'User-Agent' = 'gt-despatch-compatibility'
+              'User-Agent' = 'despatch-compatibility'
               'X-GitHub-Api-Version' = '2022-11-28'
           }
           $releaseTag = [Uri]::EscapeDataString($env:ENVOY_TAG)
           $release = Invoke-RestMethod `
-              -Uri "https://api.github.com/repos/gtvfx-contrib/gt-envoy/releases/tags/$releaseTag" `
+              -Uri "https://api.github.com/repos/gtvfx-envoy/envoy/releases/tags/$releaseTag" `
               -Headers $headers
           $assets = @($release.assets | Where-Object {
               $_.name -match '^envoy-.+-cp310-abi3-win_amd64\.whl$'
