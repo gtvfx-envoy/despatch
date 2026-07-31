@@ -87,39 +87,23 @@ jobs:
         with:
           python-version: "3.11.9"
 
-      - name: Download candidate Envoy wheel
-        id: download
+      - name: Bootstrap candidate Envoy release
+        id: bootstrap
         continue-on-error: true
         shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $headers = @{
-              Accept = 'application/vnd.github+json'
-              'User-Agent' = 'despatch-compatibility'
-              'X-GitHub-Api-Version' = '2022-11-28'
-          }
-          $releaseTag = [Uri]::EscapeDataString($env:ENVOY_TAG)
-          $release = Invoke-RestMethod `
-              -Uri "https://api.github.com/repos/gtvfx-envoy/envoy/releases/tags/$releaseTag" `
-              -Headers $headers
-          $assets = @($release.assets | Where-Object {
-              $_.name -match '^envoy-.+-cp310-abi3-win_amd64\.whl$'
-          })
-          if ($assets.Count -ne 1) {
-              throw "Expected one Windows Envoy wheel; found $($assets.Count)."
-          }
-          $wheelPath = Join-Path $env:RUNNER_TEMP $assets[0].name
-          Invoke-WebRequest -Uri $assets[0].browser_download_url -OutFile $wheelPath
-          "ENVOY_WHEEL=$wheelPath" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          .\scripts\install-envoy-release.ps1
+          -ReleaseTag "$env:ENVOY_TAG"
 
-      - name: Install candidate and development dependencies
+      - name: Install development dependencies
         id: install
         continue-on-error: true
         shell: pwsh
         run: |
           $PSNativeCommandUseErrorActionPreference = $true
           python -m pip install --upgrade pip
-          python -m pip install $env:ENVOY_WHEEL
           python -m pip install --editable '.[dev,executable,docs]'
 
       - name: Run source tests and lint
@@ -188,7 +172,7 @@ jobs:
         shell: pwsh
         run: |
           $checks = [ordered]@{
-              download = '${{ steps.download.outcome }}'
+              bootstrap = '${{ steps.bootstrap.outcome }}'
               install = '${{ steps.install.outcome }}'
               source = '${{ steps.source.outcome }}'
               build = '${{ steps.build.outcome }}'

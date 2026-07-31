@@ -89,6 +89,13 @@ also attach `despatch.exe` to the corresponding GitHub Release. The workflow
 pins the Envoy release embedded into the executable and exposes an override for
 manual compatibility builds.
 
+Windows CI jobs bootstrap that pinned Envoy release into an isolated environment
+under the runner's temporary directory. Self-hosted runners do not need a global
+Envoy installation. They require PowerShell, access to GitHub release assets,
+and the Python version configured by each workflow. The bootstrap verifies the
+published Windows bundle and Python wheel against Envoy's `SHA256SUMS` before
+installation.
+
 ## Application manifests
 
 Bundles opt into the GUI by adding `.envoy/despatch.json`. Unlisted Envoy

@@ -41,17 +41,24 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Validate Envoy release wheel
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11.9'
+
+      - name: Bootstrap requested Envoy release
         shell: pwsh
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          ENVOY_TAG: ${{ inputs.envoy_tag }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: >-
+          .\scripts\install-envoy-release.ps1
+          -ReleaseTag "${{ inputs.envoy_tag }}"
+
+      - name: Install development dependencies
+        shell: pwsh
         run: |
-          $assetCount = gh api "repos/gtvfx-envoy/envoy/releases/tags/$env:ENVOY_TAG" `
-              --jq '[.assets[] | select(.name | test("^envoy-.+-cp310-abi3-win_amd64\\.whl$"))] | length'
-          if ([int]$assetCount -ne 1) {
-            throw "Expected exactly one Windows Envoy wheel; found $assetCount."
-          }
+          python -m pip install --upgrade pip
+          python -m pip install --editable '.[dev,executable]'
 
       - name: Prepare version and Envoy pin
         run: >-

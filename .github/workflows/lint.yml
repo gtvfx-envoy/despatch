@@ -18,8 +18,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11.9'
+
+      - name: Read pinned Envoy release
+        id: release-state
+        shell: pwsh
+        run: python scripts/release_automation.py check --github-output $env:GITHUB_OUTPUT
+
+      - name: Bootstrap pinned Envoy
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          .\scripts\install-envoy-release.ps1
+          -ReleaseTag "${{ steps.release-state.outputs.envoy_tag }}"
+
+      - name: Install development dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --editable '.[dev,executable]'
+
       - name: Verify Envoy development runtime
-        run: envoy --info
+        run: |
+          envoy --version
+          envoy --info python
 
       - name: Run tests
         run: envoy python -m pytest
@@ -29,4 +55,3 @@ jobs:
 
       - name: Run Ruff format check
         run: envoy python -m ruff format --check .
-
