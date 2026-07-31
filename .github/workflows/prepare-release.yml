@@ -1,0 +1,93 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Unprefixed Despatch semantic version
+        required: true
+        type: string
+      envoy_tag:
+        description: Published Envoy release tag to embed
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Prepare release pull request
+    runs-on: [self-hosted, X64, Windows, synology]
+
+    steps:
+      - name: Create release automation token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.RELEASE_AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.RELEASE_AUTOMATION_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: gt-despatch,gt-envoy
+
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Validate Envoy release wheel
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ENVOY_TAG: ${{ inputs.envoy_tag }}
+        run: |
+          $assetCount = gh api "repos/gtvfx-contrib/gt-envoy/releases/tags/$env:ENVOY_TAG" `
+              --jq '[.assets[] | select(.name | test("^envoy-.+-cp310-abi3-win_amd64\\.whl$"))] | length'
+          if ([int]$assetCount -ne 1) {
+            throw "Expected exactly one Windows Envoy wheel; found $assetCount."
+          }
+
+      - name: Prepare version and Envoy pin
+        run: >-
+          envoy python scripts/release_automation.py prepare
+          --version "${{ inputs.version }}"
+          --envoy-tag "${{ inputs.envoy_tag }}"
+
+      - name: Validate source
+        run: |
+          envoy python -m pytest
+          envoy python -m ruff check .
+          envoy python -m ruff format --check .
+
+      - name: Ensure release preparation label exists
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: >-
+          gh label create release-prep --color 5319E7 --force
+          --description "Automated release preparation pull request"
+
+      - name: Create or update draft pull request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: automation/release-v${{ inputs.version }}
+          base: main
+          commit-message: Prepare v${{ inputs.version }} release
+          title: Prepare v${{ inputs.version }} release
+          body: |
+            Automated Despatch release preparation.
+
+            - Synchronizes the Python package version.
+            - Pins the executable build to Envoy `${{ inputs.envoy_tag }}`.
+            - Runs the source release-readiness checks.
+
+            Merge only after the normal pull request checks pass.
+          labels: release-prep
+          draft: always-true
+          delete-branch: false

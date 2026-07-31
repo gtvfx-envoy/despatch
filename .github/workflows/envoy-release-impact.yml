@@ -1,0 +1,284 @@
+name: Envoy Release Impact
+
+on:
+  repository_dispatch:
+    types: [envoy-released]
+  workflow_dispatch:
+    inputs:
+      envoy_tag:
+        description: Envoy release tag to replay
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  ENVOY_TAG: ${{ github.event.client_payload.envoy_tag || inputs.envoy_tag }}
+
+jobs:
+  classify:
+    name: Classify Envoy changes
+    runs-on: ubuntu-24.04
+    outputs:
+      relevant: ${{ steps.impact.outputs.relevant }}
+      pinned_tag: ${{ steps.current.outputs.envoy_tag }}
+
+    steps:
+      - name: Checkout Despatch
+        uses: actions/checkout@v7
+
+      - name: Checkout candidate Envoy release
+        uses: actions/checkout@v7
+        with:
+          repository: gtvfx-contrib/gt-envoy
+          ref: ${{ env.ENVOY_TAG }}
+          fetch-depth: 0
+          path: downstream/envoy
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Validate release and current pin
+        id: current
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PAYLOAD_COMMIT: ${{ github.event.client_payload.envoy_commit }}
+          SCHEMA_VERSION: ${{ github.event.client_payload.schema_version }}
+        run: |
+          gh api "repos/gtvfx-contrib/gt-envoy/releases/tags/$ENVOY_TAG" --jq .tag_name
+          if [[ "${{ github.event_name }}" == repository_dispatch ]]; then
+            test "$SCHEMA_VERSION" = 1
+            test "$(git -C downstream/envoy rev-parse HEAD)" = "$PAYLOAD_COMMIT"
+          fi
+          python scripts/release_automation.py check --github-output "$GITHUB_OUTPUT"
+
+      - name: Classify changed Envoy files
+        id: impact
+        run: >-
+          python scripts/release_automation.py impact
+          --envoy-root downstream/envoy
+          --base-tag "${{ steps.current.outputs.envoy_tag }}"
+          --head-tag "$ENVOY_TAG"
+          --output impact.json
+          --github-output "$GITHUB_OUTPUT"
+
+      - name: Upload impact evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: envoy-impact
+          path: impact.json
+
+  validate:
+    name: Validate source and frozen executable
+    needs: classify
+    if: needs.classify.outputs.relevant == 'true'
+    runs-on: [self-hosted, X64, Windows, synology]
+
+    steps:
+      - name: Checkout Despatch
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11.9"
+
+      - name: Download candidate Envoy wheel
+        id: download
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $headers = @{
+              Accept = 'application/vnd.github+json'
+              'User-Agent' = 'gt-despatch-compatibility'
+              'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          $releaseTag = [Uri]::EscapeDataString($env:ENVOY_TAG)
+          $release = Invoke-RestMethod `
+              -Uri "https://api.github.com/repos/gtvfx-contrib/gt-envoy/releases/tags/$releaseTag" `
+              -Headers $headers
+          $assets = @($release.assets | Where-Object {
+              $_.name -match '^envoy-.+-cp310-abi3-win_amd64\.whl$'
+          })
+          if ($assets.Count -ne 1) {
+              throw "Expected one Windows Envoy wheel; found $($assets.Count)."
+          }
+          $wheelPath = Join-Path $env:RUNNER_TEMP $assets[0].name
+          Invoke-WebRequest -Uri $assets[0].browser_download_url -OutFile $wheelPath
+          "ENVOY_WHEEL=$wheelPath" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Install candidate and development dependencies
+        id: install
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          python -m pip install --upgrade pip
+          python -m pip install $env:ENVOY_WHEEL
+          python -m pip install --editable '.[dev,executable,docs]'
+
+      - name: Run source tests and lint
+        id: source
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          python -m pytest
+          python -m ruff check .
+          python -m ruff format --check .
+
+      - name: Build final windowed executable
+        id: build
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $python = (Get-Command python -ErrorAction Stop).Source
+          .\scripts\build-executable.ps1 -PythonExecutable $python -SkipToolInstall
+
+      - name: Validate final executable
+        id: executable
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $executable = (Resolve-Path -LiteralPath '.\dist\despatch.exe').Path
+          if ((Get-Item -LiteralPath $executable).Length -le 0) {
+              throw 'The executable is empty.'
+          }
+          $versionProcess = Start-Process $executable -ArgumentList '--version' -Wait -PassThru
+          if ($versionProcess.ExitCode -ne 0) { throw 'despatch.exe --version failed.' }
+
+          $requestPath = Join-Path $env:RUNNER_TEMP 'invalid-launch-request.json'
+          $resultPath = Join-Path $env:RUNNER_TEMP 'invalid-launch-result.json'
+          '{}' | Set-Content -LiteralPath $requestPath -Encoding utf8
+          $worker = Start-Process $executable `
+              -ArgumentList '--launch-worker', $requestPath, $resultPath -Wait -PassThru
+          if ($worker.ExitCode -ne 2) { throw "Invalid worker exited $($worker.ExitCode)." }
+          $workerResult = Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json
+          if ($workerResult.error -notmatch 'Invalid launch request') {
+              throw 'The frozen worker did not return the expected structured error.'
+          }
+
+          $readyPath = Join-Path $env:RUNNER_TEMP 'despatch-docs-ready.json'
+          $docs = Start-Process $executable -ArgumentList '--docs-server', $readyPath -PassThru
+          try {
+              $deadline = [DateTime]::UtcNow.AddSeconds(30)
+              while (-not (Test-Path -LiteralPath $readyPath)) {
+                  if ($docs.HasExited) { throw "Documentation helper exited early." }
+                  if ([DateTime]::UtcNow -ge $deadline) { throw 'Documentation helper timed out.' }
+                  Start-Sleep -Milliseconds 100
+              }
+              $ready = Get-Content -LiteralPath $readyPath -Raw | ConvertFrom-Json
+              $response = Invoke-WebRequest -Uri $ready.url -UseBasicParsing
+              if ($response.StatusCode -ne 200 -or $response.Content -notmatch '<title>Despatch') {
+                  throw 'Bundled documentation is invalid.'
+              }
+          } finally {
+              taskkill /PID $docs.Id /T /F 2>$null | Out-Null
+          }
+          Write-Output "Executable SHA-256: $((Get-FileHash $executable -Algorithm SHA256).Hash)"
+
+      - name: Record validation result
+        if: always()
+        shell: pwsh
+        run: |
+          $checks = [ordered]@{
+              download = '${{ steps.download.outcome }}'
+              install = '${{ steps.install.outcome }}'
+              source = '${{ steps.source.outcome }}'
+              build = '${{ steps.build.outcome }}'
+              executable = '${{ steps.executable.outcome }}'
+          }
+          $classification = if ($checks.Values -contains 'failure') { 'required' } else { 'review' }
+          @{
+              classification = $classification
+              checks = $checks
+          } | ConvertTo-Json -Depth 4 | Set-Content compatibility-result.json -Encoding utf8
+
+      - name: Upload validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: despatch-compatibility
+          path: compatibility-result.json
+          if-no-files-found: error
+
+  notify:
+    name: Create or update release-impact issue
+    needs: [classify, validate]
+    if: always() && needs.classify.result == 'success'
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Despatch
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Download impact evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: envoy-impact
+          path: evidence
+
+      - name: Download validation evidence
+        if: needs.classify.outputs.relevant == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: despatch-compatibility
+          path: evidence
+
+      - name: Report no release impact
+        if: needs.classify.outputs.relevant != 'true'
+        run: |
+          echo "### Despatch: no release impact" >> "$GITHUB_STEP_SUMMARY"
+          echo "Envoy $ENVOY_TAG has no relevant Core or Python changes." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build issue report
+        if: needs.classify.outputs.relevant == 'true'
+        id: report
+        run: >-
+          python scripts/release_automation.py report
+          --impact evidence/impact.json
+          --result evidence/compatibility-result.json
+          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          --output issue.md
+          --github-output "$GITHUB_OUTPUT"
+
+      - name: Create or update issue
+        if: needs.classify.outputs.relevant == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLASSIFICATION: ${{ steps.report.outputs.classification }}
+          MARKER: ${{ steps.report.outputs.marker }}
+        run: |
+          gh label create dependency:envoy --color 1D76DB --force \
+            --description "Tracks the Envoy runtime embedded by Despatch"
+          gh label create "release-impact:$CLASSIFICATION" --color D93F0B --force \
+            --description "Automated downstream release assessment"
+          issue_number="$(
+            gh issue list --state all --limit 100 --json number,body \
+              --jq ".[] | select(.body | contains(\"$MARKER\")) | .number" | head -n 1
+          )"
+          title="Review Envoy $ENVOY_TAG compatibility and release impact"
+          if [[ -n "$issue_number" ]]; then
+            gh issue edit "$issue_number" --title "$title" --body-file issue.md \
+              --add-label dependency:envoy --add-label "release-impact:$CLASSIFICATION"
+            if [[ "$CLASSIFICATION" == required ]]; then
+              gh issue edit "$issue_number" --remove-label release-impact:review || true
+            else
+              gh issue edit "$issue_number" --remove-label release-impact:required || true
+            fi
+            gh issue reopen "$issue_number" || true
+          else
+            gh issue create --title "$title" --body-file issue.md \
+              --label dependency:envoy --label "release-impact:$CLASSIFICATION"
+          fi

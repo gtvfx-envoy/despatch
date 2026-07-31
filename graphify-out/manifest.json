@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   ".github/workflows/build-release.yml": {
-    "mtime": 1785430409.231623,
-    "ast_hash": "c0d52d3aaa9716663748fd6687f0e116",
+    "mtime": 1785454016.500353,
+    "ast_hash": "74b99f7ab4d5bf1ce654da290770add1",
     "semantic_hash": ""
   },
   ".github/workflows/check-docs.yml": {
@@ -245,8 +245,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1785428306.9578133,
-    "ast_hash": "73204140ca7a996ab17df021c1ce769b",
+    "mtime": 1785431185.9705029,
+    "ast_hash": "c1202ffda5ada34de883e6dc86ddd992",
     "semantic_hash": ""
   },
   "docs/examples.md": {
@@ -327,6 +327,36 @@
   "resources/icons/despatch.svg": {
     "mtime": 1785428306.9998827,
     "ast_hash": "5a16f6b27834431242c646bc5a66da11",
+    "semantic_hash": ""
+  },
+  "scripts/release_automation.py": {
+    "mtime": 1785455598.2926395,
+    "ast_hash": "e49b03db47095ca4b27c94966968f0bb",
+    "semantic_hash": ""
+  },
+  "tests/test_release_automation.py": {
+    "mtime": 1785454197.7597246,
+    "ast_hash": "bfc899218b20f87b7351c683932cc841",
+    "semantic_hash": ""
+  },
+  ".github/workflows/envoy-release-impact.yml": {
+    "mtime": 1785454921.928115,
+    "ast_hash": "18a5b7f9395b921adede260f8c9e249c",
+    "semantic_hash": ""
+  },
+  ".github/workflows/lint.yml": {
+    "mtime": 1785453914.9220324,
+    "ast_hash": "5b55297c7116da61dd065ed0439e9ca3",
+    "semantic_hash": ""
+  },
+  ".github/workflows/prepare-release.yml": {
+    "mtime": 1785455405.8223886,
+    "ast_hash": "d5ace8ee9698f5d6a29fd95bb103f205",
+    "semantic_hash": ""
+  },
+  ".github/workflows/tag-release.yml": {
+    "mtime": 1785455406.9122477,
+    "ast_hash": "85d34b8c85d7a81a2b3ed8632803b26d",
     "semantic_hash": ""
   }
 }

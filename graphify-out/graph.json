@@ -63,8 +63,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_main",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "__main__.py"
     },
     {
@@ -96,8 +96,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "py_despatch_main_createapplication",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 7,
+      "community_name": "_icons.py",
       "norm_label": "_createapplication()"
     },
     {
@@ -107,8 +107,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "py_despatch_main_py_qapplication",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 7,
+      "community_name": "_icons.py",
       "norm_label": "qapplication"
     },
     {
@@ -129,8 +129,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_main_rationale_1",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "command-line entry point for the despatch tray application."
     },
     {
@@ -151,8 +151,8 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "py_despatch_main_rationale_54",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 7,
+      "community_name": "_icons.py",
       "norm_label": "create and configure the shared qt application."
     },
     {
@@ -250,8 +250,8 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "py_despatch_application_despatchapplication_window",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 19,
+      "community_name": "DespatchApplication",
       "norm_label": ".window()"
     },
     {
@@ -426,8 +426,8 @@
       "source_location": "L321",
       "_origin": "ast",
       "id": "py_despatch_application_despatchapplication_switchstack",
-      "community": 19,
-      "community_name": "DespatchApplication",
+      "community": 35,
+      "community_name": "._submit",
       "norm_label": "._switchstack()"
     },
     {
@@ -437,8 +437,8 @@
       "source_location": "L352",
       "_origin": "ast",
       "id": "py_despatch_application_despatchapplication_choosecustomstack",
-      "community": 19,
-      "community_name": "DespatchApplication",
+      "community": 35,
+      "community_name": "._submit",
       "norm_label": "._choosecustomstack()"
     },
     {
@@ -646,8 +646,8 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "py_despatch_application_rationale_100",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 19,
+      "community_name": "DespatchApplication",
       "norm_label": "primary launcher window."
     },
     {
@@ -811,8 +811,8 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "py_despatch_application_rationale_322",
-      "community": 19,
-      "community_name": "DespatchApplication",
+      "community": 35,
+      "community_name": "._submit",
       "norm_label": "persist an explicit stack or enable automatic resolution."
     },
     {
@@ -822,8 +822,8 @@
       "source_location": "L353",
       "_origin": "ast",
       "id": "py_despatch_application_rationale_353",
-      "community": 19,
-      "community_name": "DespatchApplication",
+      "community": 35,
+      "community_name": "._submit",
       "norm_label": "prompt for a custom `.estack` file and request its activation."
     },
     {
@@ -1295,8 +1295,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_constants",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "_constants.py"
     },
     {
@@ -1306,8 +1306,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_constants_rationale_1",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "constants shared by despatch modules."
     },
     {
@@ -2781,7 +2781,7 @@
       "_origin": "ast",
       "id": "py_despatch_main_window_globalpoint",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": "_globalpoint()"
     },
     {
@@ -2792,7 +2792,7 @@
       "_origin": "ast",
       "id": "qpoint",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": "qpoint"
     },
     {
@@ -2802,7 +2802,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "py_despatch_main_window_titlebar",
-      "community": 41,
+      "community": 16,
       "community_name": "TitleBar",
       "norm_label": "titlebar"
     },
@@ -2813,7 +2813,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "py_despatch_main_window_titlebar_init",
-      "community": 41,
+      "community": 16,
       "community_name": "TitleBar",
       "norm_label": ".__init__()"
     },
@@ -2825,7 +2825,7 @@
       "_origin": "ast",
       "id": "py_despatch_main_window_titlebar_mousepressevent",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": ".mousepressevent()"
     },
     {
@@ -2836,7 +2836,7 @@
       "_origin": "ast",
       "id": "py_despatch_main_window_titlebar_mousemoveevent",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": ".mousemoveevent()"
     },
     {
@@ -2846,7 +2846,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "py_despatch_main_window_titlebar_mousereleaseevent",
-      "community": 41,
+      "community": 16,
       "community_name": "TitleBar",
       "norm_label": ".mousereleaseevent()"
     },
@@ -2868,8 +2868,8 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_init",
-      "community": 41,
-      "community_name": "TitleBar",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": ".__init__()"
     },
     {
@@ -2879,7 +2879,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_setupui",
-      "community": 41,
+      "community": 16,
       "community_name": "TitleBar",
       "norm_label": "._setupui()"
     },
@@ -2890,8 +2890,8 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_connectsignals",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": "._connectsignals()"
     },
     {
@@ -2901,8 +2901,8 @@
       "source_location": "L222",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_setstacks",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": ".setstacks()"
     },
     {
@@ -2934,8 +2934,8 @@
       "source_location": "L302",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_setready",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 64,
+      "community_name": ".setReady",
       "norm_label": ".setready()"
     },
     {
@@ -2956,8 +2956,8 @@
       "source_location": "L320",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_showtransientstatus",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 64,
+      "community_name": ".setReady",
       "norm_label": ".showtransientstatus()"
     },
     {
@@ -2978,8 +2978,8 @@
       "source_location": "L344",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_cleartransientstatus",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 64,
+      "community_name": ".setReady",
       "norm_label": "._cleartransientstatus()"
     },
     {
@@ -2989,8 +2989,8 @@
       "source_location": "L349",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_showlauncher",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 29,
+      "community_name": ".focusSearch",
       "norm_label": ".showlauncher()"
     },
     {
@@ -3000,8 +3000,8 @@
       "source_location": "L359",
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_focussearch",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 29,
+      "community_name": ".focusSearch",
       "norm_label": ".focussearch()"
     },
     {
@@ -3111,7 +3111,7 @@
       "_origin": "ast",
       "id": "py_despatch_main_window_mainwindow_showapplicationmenu",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": "._showapplicationmenu()"
     },
     {
@@ -3155,7 +3155,7 @@
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_14",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": "return a mouse event's global point across supported qt versions."
     },
     {
@@ -3165,7 +3165,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_21",
-      "community": 41,
+      "community": 16,
       "community_name": "TitleBar",
       "norm_label": "custom title bar for the frameless launcher."
     },
@@ -3177,7 +3177,7 @@
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_59",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": "begin a window drag from the custom title bar."
     },
     {
@@ -3188,7 +3188,7 @@
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_75",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": "move the window during a fallback title-bar drag."
     },
     {
@@ -3198,7 +3198,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_83",
-      "community": 41,
+      "community": 16,
       "community_name": "TitleBar",
       "norm_label": "finish a fallback title-bar drag."
     },
@@ -3220,7 +3220,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_130",
-      "community": 41,
+      "community": 16,
       "community_name": "TitleBar",
       "norm_label": "build the launcher interface."
     },
@@ -3231,8 +3231,8 @@
       "source_location": "L205",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_205",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": "connect all ui events."
     },
     {
@@ -3242,8 +3242,8 @@
       "source_location": "L227",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_227",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": "populate the envoy stack selector. args: stacks: available published stacks...."
     },
     {
@@ -3275,8 +3275,8 @@
       "source_location": "L303",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_303",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 64,
+      "community_name": ".setReady",
       "norm_label": "restore interactive controls and display a status message."
     },
     {
@@ -3297,8 +3297,8 @@
       "source_location": "L321",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_321",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 64,
+      "community_name": ".setReady",
       "norm_label": "display a status message that cannot clear newer ui state. args: message:..."
     },
     {
@@ -3319,8 +3319,8 @@
       "source_location": "L345",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_345",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 64,
+      "community_name": ".setReady",
       "norm_label": "clear a transient status only when no newer status replaced it."
     },
     {
@@ -3330,8 +3330,8 @@
       "source_location": "L350",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_350",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 29,
+      "community_name": ".focusSearch",
       "norm_label": "show, raise, and focus the launcher."
     },
     {
@@ -3341,8 +3341,8 @@
       "source_location": "L360",
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_360",
-      "community": 11,
-      "community_name": "MainWindow",
+      "community": 29,
+      "community_name": ".focusSearch",
       "norm_label": "focus and select the search field."
     },
     {
@@ -3441,7 +3441,7 @@
       "_origin": "ast",
       "id": "py_despatch_main_window_rationale_495",
       "community": 16,
-      "community_name": "_globalPoint",
+      "community_name": "TitleBar",
       "norm_label": "show contextual actions for an application row."
     },
     {
@@ -3473,8 +3473,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_models",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "_models.py"
     },
     {
@@ -3484,8 +3484,8 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "py_despatch_models_namedstack",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": "namedstack"
     },
     {
@@ -3495,8 +3495,8 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "py_despatch_models_stackmode",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "stackmode"
     },
     {
@@ -3506,8 +3506,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "strenum",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "strenum"
     },
     {
@@ -3528,8 +3528,8 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "py_despatch_models_stackstate",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": "stackstate"
     },
     {
@@ -3606,7 +3606,7 @@
       "_origin": "ast",
       "id": "py_despatch_models_catalogsnapshot",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": "catalogsnapshot"
     },
     {
@@ -3627,8 +3627,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_models_rationale_1",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "typed domain models used by despatch."
     },
     {
@@ -3638,8 +3638,8 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "py_despatch_models_rationale_12",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": "a published envoy stack."
     },
     {
@@ -3649,8 +3649,8 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "py_despatch_models_rationale_20",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "the active despatch stack-resolution mode."
     },
     {
@@ -3671,8 +3671,8 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "py_despatch_models_rationale_40",
-      "community": 28,
-      "community_name": "_models.py",
+      "community": 12,
+      "community_name": "StackState",
       "norm_label": "the stack resolution state used by the catalog and launch flow."
     },
     {
@@ -3749,7 +3749,7 @@
       "_origin": "ast",
       "id": "py_despatch_models_rationale_113",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": "a complete immutable application catalog snapshot."
     },
     {
@@ -4177,8 +4177,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_search",
-      "community": 29,
-      "community_name": "_search.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "_search.py"
     },
     {
@@ -4188,8 +4188,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "py_despatch_search_rankapplications",
-      "community": 29,
-      "community_name": "_search.py",
+      "community": 3,
+      "community_name": "ApplicationEntry",
       "norm_label": "rankapplications()"
     },
     {
@@ -4199,8 +4199,8 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "py_despatch_search_scoreapplication",
-      "community": 29,
-      "community_name": "_search.py",
+      "community": 3,
+      "community_name": "ApplicationEntry",
       "norm_label": "_scoreapplication()"
     },
     {
@@ -4210,8 +4210,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "py_despatch_search_issubsequence",
-      "community": 29,
-      "community_name": "_search.py",
+      "community": 3,
+      "community_name": "ApplicationEntry",
       "norm_label": "_issubsequence()"
     },
     {
@@ -4221,8 +4221,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_search_rationale_1",
-      "community": 29,
-      "community_name": "_search.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "deterministic application search and ranking."
     },
     {
@@ -4232,8 +4232,8 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "py_despatch_search_rationale_16",
-      "community": 29,
-      "community_name": "_search.py",
+      "community": 3,
+      "community_name": "ApplicationEntry",
       "norm_label": "return applications ordered by text relevance and user preference. args:..."
     },
     {
@@ -4243,8 +4243,8 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "py_despatch_search_rationale_45",
-      "community": 29,
-      "community_name": "_search.py",
+      "community": 3,
+      "community_name": "ApplicationEntry",
       "norm_label": "calculate a lower-is-better search score."
     },
     {
@@ -4254,8 +4254,8 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "py_despatch_search_rationale_71",
-      "community": 29,
-      "community_name": "_search.py",
+      "community": 3,
+      "community_name": "ApplicationEntry",
       "norm_label": "return whether query characters occur in order within text."
     },
     {
@@ -4903,8 +4903,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_single_instance",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "_single_instance.py"
     },
     {
@@ -5013,8 +5013,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_single_instance_rationale_1",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "single-instance coordination using qt local ipc."
     },
     {
@@ -5101,8 +5101,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_stack_monitor",
-      "community": 1,
-      "community_name": "StackMonitor",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "_stack_monitor.py"
     },
     {
@@ -5354,8 +5354,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "py_despatch_stack_monitor_rationale_1",
-      "community": 1,
-      "community_name": "StackMonitor",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "non-blocking polling for changes to an explicitly selected stack."
     },
     {
@@ -5751,7 +5751,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_despatchtrayicon",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": "despatchtrayicon"
     },
     {
@@ -5762,7 +5762,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_despatchtrayicon_init",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": ".__init__()"
     },
     {
@@ -5773,7 +5773,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_despatchtrayicon_setstate",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": ".setstate()"
     },
     {
@@ -5784,7 +5784,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_despatchtrayicon_rebuildmenu",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": ".rebuildmenu()"
     },
     {
@@ -5795,7 +5795,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_despatchtrayicon_stacklabel",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": "._stacklabel()"
     },
     {
@@ -5839,7 +5839,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_rationale_19",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": "expose despatch through asymmetric left- and right-click behavior."
     },
     {
@@ -5850,7 +5850,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_rationale_47",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": "update tray favorites and stack actions."
     },
     {
@@ -5861,7 +5861,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_rationale_56",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": "rebuild the compact native context menu from current state."
     },
     {
@@ -5872,7 +5872,7 @@
       "_origin": "ast",
       "id": "py_despatch_tray_icon_rationale_126",
       "community": 12,
-      "community_name": "CatalogSnapshot",
+      "community_name": "StackState",
       "norm_label": "return the compact label for the active stack mode."
     },
     {
@@ -6039,8 +6039,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_pyinstaller_entry",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "pyinstaller_entry.py"
     },
     {
@@ -6050,9 +6050,372 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_pyinstaller_entry_rationale_1",
-      "community": 6,
-      "community_name": "_documentation.py",
+      "community": 10,
+      "community_name": "despatch/__init__.py",
       "norm_label": "absolute-import entry point for the frozen despatch application."
+    },
+    {
+      "label": "release_automation.py",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripts_release_automation",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "release_automation.py"
+    },
+    {
+      "label": "validateVersion()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L29",
+      "_origin": "ast",
+      "id": "scripts_release_automation_validateversion",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "validateversion()"
+    },
+    {
+      "label": "validateTag()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L36",
+      "_origin": "ast",
+      "id": "scripts_release_automation_validatetag",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "validatetag()"
+    },
+    {
+      "label": "replaceExactly()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "scripts_release_automation_replaceexactly",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "replaceexactly()"
+    },
+    {
+      "label": "Path",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "scripts_release_automation_py_path",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "path"
+    },
+    {
+      "label": "Pattern",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "pattern",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "pattern"
+    },
+    {
+      "label": "parseReleaseState()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "scripts_release_automation_parsereleasestate",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "parsereleasestate()"
+    },
+    {
+      "label": "checkRelease()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L89",
+      "_origin": "ast",
+      "id": "scripts_release_automation_checkrelease",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "checkrelease()"
+    },
+    {
+      "label": "prepareRelease()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L107",
+      "_origin": "ast",
+      "id": "scripts_release_automation_preparerelease",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "preparerelease()"
+    },
+    {
+      "label": "gitOutput()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L135",
+      "_origin": "ast",
+      "id": "scripts_release_automation_gitoutput",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "gitoutput()"
+    },
+    {
+      "label": "lockfileHasDependencyChanges()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L147",
+      "_origin": "ast",
+      "id": "scripts_release_automation_lockfilehasdependencychanges",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "lockfilehasdependencychanges()"
+    },
+    {
+      "label": "workspaceManifestHasDependencyChanges()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L161",
+      "_origin": "ast",
+      "id": "scripts_release_automation_workspacemanifesthasdependencychanges",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "workspacemanifesthasdependencychanges()"
+    },
+    {
+      "label": "classifyImpact()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L175",
+      "_origin": "ast",
+      "id": "scripts_release_automation_classifyimpact",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "classifyimpact()"
+    },
+    {
+      "label": "writeGitHubOutput()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L211",
+      "_origin": "ast",
+      "id": "scripts_release_automation_writegithuboutput",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "writegithuboutput()"
+    },
+    {
+      "label": "buildIssueReport()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L218",
+      "_origin": "ast",
+      "id": "scripts_release_automation_buildissuereport",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "buildissuereport()"
+    },
+    {
+      "label": "buildParser()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L265",
+      "_origin": "ast",
+      "id": "scripts_release_automation_buildparser",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "buildparser()"
+    },
+    {
+      "label": "ArgumentParser",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "id": "argumentparser",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "argumentparser"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L291",
+      "_origin": "ast",
+      "id": "scripts_release_automation_main",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "main()"
+    },
+    {
+      "label": "Release and Envoy compatibility automation for Despatch.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_1",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "release and envoy compatibility automation for despatch."
+    },
+    {
+      "label": "Validate and return an unprefixed semantic version.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L30",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_30",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "validate and return an unprefixed semantic version."
+    },
+    {
+      "label": "Validate and return a v-prefixed semantic-version tag.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L37",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_37",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "validate and return a v-prefixed semantic-version tag."
+    },
+    {
+      "label": "Apply a deterministic text replacement with an exact match count.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L51",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_51",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "apply a deterministic text replacement with an exact match count."
+    },
+    {
+      "label": "Read the synchronized Despatch version and Envoy workflow pin.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L62",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_62",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "read the synchronized despatch version and envoy workflow pin."
+    },
+    {
+      "label": "Validate Despatch release versions and the embedded Envoy pin.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L94",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_94",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "validate despatch release versions and the embedded envoy pin."
+    },
+    {
+      "label": "Synchronize the Despatch version and both embedded Envoy defaults.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L108",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_108",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "synchronize the despatch version and both embedded envoy defaults."
+    },
+    {
+      "label": "Run Git and return stripped standard output.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L136",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_136",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "run git and return stripped standard output."
+    },
+    {
+      "label": "Return whether Envoy's lockfile changed beyond workspace version lines.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L148",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_148",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "return whether envoy's lockfile changed beyond workspace version lines."
+    },
+    {
+      "label": "Return whether Envoy's workspace manifest changed beyond its release version.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L162",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_162",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "return whether envoy's workspace manifest changed beyond its release version."
+    },
+    {
+      "label": "Classify Envoy release changes that can affect Despatch.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L176",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_176",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "classify envoy release changes that can affect despatch."
+    },
+    {
+      "label": "Append simple values to a GitHub Actions output file.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L212",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_212",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "append simple values to a github actions output file."
+    },
+    {
+      "label": "Build the Despatch release-impact issue body.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L225",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_225",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "build the despatch release-impact issue body."
+    },
+    {
+      "label": "Build the command-line parser.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L266",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_266",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "build the command-line parser."
+    },
+    {
+      "label": "Run Despatch release automation.",
+      "file_type": "rationale",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L292",
+      "_origin": "ast",
+      "id": "scripts_release_automation_rationale_292",
+      "community": 28,
+      "community_name": "release_automation.py",
+      "norm_label": "run despatch release automation."
     },
     {
       "label": "conftest.py",
@@ -7177,6 +7540,116 @@
       "norm_label": "testtransientstatusdoesnotclearnewererror()"
     },
     {
+      "label": "test_release_automation.py",
+      "file_type": "code",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_test_release_automation",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": "test_release_automation.py"
+    },
+    {
+      "label": "ReleaseAutomationTests",
+      "file_type": "code",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_releaseautomationtests",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": "releaseautomationtests"
+    },
+    {
+      "label": ".testValidateVersionAcceptsSemver()",
+      "file_type": "code",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_releaseautomationtests_testvalidateversionacceptssemver",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": ".testvalidateversionacceptssemver()"
+    },
+    {
+      "label": ".testValidateVersionRejectsInvalidValues()",
+      "file_type": "code",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L26",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_releaseautomationtests_testvalidateversionrejectsinvalidvalues",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": ".testvalidateversionrejectsinvalidvalues()"
+    },
+    {
+      "label": ".testPrepareReleaseUpdatesAllPins()",
+      "file_type": "code",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L32",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_releaseautomationtests_testpreparereleaseupdatesallpins",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": ".testpreparereleaseupdatesallpins()"
+    },
+    {
+      "label": "Tests for Despatch release automation.",
+      "file_type": "rationale",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_rationale_1",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": "tests for despatch release automation."
+    },
+    {
+      "label": "Exercise deterministic release preparation.",
+      "file_type": "rationale",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_rationale_18",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": "exercise deterministic release preparation."
+    },
+    {
+      "label": "Valid SemVer values are returned unchanged.",
+      "file_type": "rationale",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L21",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_rationale_21",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": "valid semver values are returned unchanged."
+    },
+    {
+      "label": "Invalid release values are rejected.",
+      "file_type": "rationale",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_rationale_27",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": "invalid release values are rejected."
+    },
+    {
+      "label": "Preparation synchronizes both versions and both Envoy defaults.",
+      "file_type": "rationale",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L33",
+      "_origin": "ast",
+      "id": "tests_test_release_automation_rationale_33",
+      "community": 62,
+      "community_name": "ReleaseAutomationTests",
+      "norm_label": "preparation synchronizes both versions and both envoy defaults."
+    },
+    {
       "label": "test_search.py",
       "file_type": "code",
       "source_file": "tests/test_search.py",
@@ -7906,7 +8379,7 @@
       "label": "Development",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L55",
+      "source_location": "L56",
       "_origin": "ast",
       "id": "readme_development",
       "community": 43,
@@ -7917,7 +8390,7 @@
       "label": "Standalone executable",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L68",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "readme_standalone_executable",
       "community": 43,
@@ -7928,7 +8401,7 @@
       "label": "Application manifests",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L91",
+      "source_location": "L92",
       "_origin": "ast",
       "id": "readme_application_manifests",
       "community": 43,
@@ -7939,7 +8412,7 @@
       "label": "Current milestone",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L98",
+      "source_location": "L99",
       "_origin": "ast",
       "id": "readme_current_milestone",
       "community": 43,
@@ -8762,8 +9235,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "despatch",
-      "id": "Despatch",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Despatch"
     },
     {
       "label": "Envoy",
@@ -8778,8 +9251,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "envoy",
-      "id": "Envoy",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Envoy"
     },
     {
       "label": "Stack (.estack)",
@@ -8794,8 +9267,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "stack (.estack)",
-      "id": "Stack",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Stack"
     },
     {
       "label": "Envoy Bundle",
@@ -8810,8 +9283,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "envoy bundle",
-      "id": "Bundle",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Bundle"
     },
     {
       "label": "Bundle Manifest (despatch.json)",
@@ -8826,8 +9299,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "bundle manifest (despatch.json)",
-      "id": "Manifest",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Manifest"
     },
     {
       "label": "Application Catalog",
@@ -8842,8 +9315,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "application catalog",
-      "id": "Catalog",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Catalog"
     },
     {
       "label": "Notification Area Tray Icon",
@@ -8857,8 +9330,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "notification area tray icon",
-      "id": "TrayIcon",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "TrayIcon"
     },
     {
       "label": "Main Launcher Window",
@@ -8872,8 +9345,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "main launcher window",
-      "id": "LauncherWindow",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "LauncherWindow"
     },
     {
       "label": "Despatch Settings",
@@ -8887,8 +9360,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "despatch settings",
-      "id": "Settings",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Settings"
     },
     {
       "label": "Stack Monitor",
@@ -8903,8 +9376,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "stack monitor",
-      "id": "StackMonitor",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "StackMonitor"
     },
     {
       "label": "PyInstaller",
@@ -8918,8 +9391,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "pyinstaller",
-      "id": "PyInstaller",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "PyInstaller"
     },
     {
       "label": "GitHub Actions CI/CD",
@@ -8933,8 +9406,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "github actions ci/cd",
-      "id": "GitHubActions",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "GitHubActions"
     },
     {
       "label": "ProperDocs Documentation Site",
@@ -8948,8 +9421,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "properdocs documentation site",
-      "id": "ProperDocs",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "ProperDocs"
     },
     {
       "label": "Automatic Stack Resolution",
@@ -8964,8 +9437,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "automatic stack resolution",
-      "id": "AutomaticResolution",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "AutomaticResolution"
     },
     {
       "label": "Global Keyboard Shortcut",
@@ -8979,8 +9452,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "global keyboard shortcut",
-      "id": "GlobalShortcut",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "GlobalShortcut"
     },
     {
       "label": "Favorites",
@@ -8994,8 +9467,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "favorites",
-      "id": "Favorites",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Favorites"
     },
     {
       "label": "Manifest Suppression",
@@ -9009,8 +9482,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "manifest suppression",
-      "id": "Suppression",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "Suppression"
     },
     {
       "label": "Launch Worker",
@@ -9024,8 +9497,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "launch worker",
-      "id": "LaunchWorker",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "LaunchWorker"
     },
     {
       "label": "Envoy Gateway",
@@ -9039,8 +9512,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "envoy gateway",
-      "id": "EnvoyGateway",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "EnvoyGateway"
     },
     {
       "label": "Application Search",
@@ -9054,8 +9527,8 @@
       "file_type": "concept",
       "community": 4,
       "norm_label": "application search",
-      "id": "SearchIndex",
-      "community_name": "Despatch"
+      "community_name": "Despatch",
+      "id": "SearchIndex"
     }
   ],
   "links": [
@@ -19226,6 +19699,733 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L218",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_buildissuereport",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L265",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_buildparser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_checkrelease",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L175",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_classifyimpact",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L135",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_gitoutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L147",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_lockfilehasdependencychanges",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L291",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_parsereleasestate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_preparerelease",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_replaceexactly",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_validatetag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L29",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_validateversion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L161",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_workspacemanifesthasdependencychanges",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L211",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation",
+      "target": "scripts_release_automation_writegithuboutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_1",
+      "target": "scripts_release_automation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L96",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_checkrelease",
+      "target": "scripts_release_automation_validateversion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L109",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_preparerelease",
+      "target": "scripts_release_automation_validateversion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_30",
+      "target": "scripts_release_automation_validateversion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L40",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_validatetag",
+      "target": "scripts_release_automation_validateversion",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_checkrelease",
+      "target": "scripts_release_automation_validatetag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_classifyimpact",
+      "target": "scripts_release_automation_validatetag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L110",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_preparerelease",
+      "target": "scripts_release_automation_validatetag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_37",
+      "target": "scripts_release_automation_validatetag",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L111",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_preparerelease",
+      "target": "scripts_release_automation_replaceexactly",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L51",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_51",
+      "target": "scripts_release_automation_replaceexactly",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_replaceexactly",
+      "target": "pattern",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_replaceexactly",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L218",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_buildissuereport",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_checkrelease",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L175",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_classifyimpact",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L135",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_gitoutput",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L147",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_lockfilehasdependencychanges",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L295",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_main",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_parsereleasestate",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_preparerelease",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L161",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_workspacemanifesthasdependencychanges",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "parameter_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L211",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_writegithuboutput",
+      "target": "scripts_release_automation_py_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_checkrelease",
+      "target": "scripts_release_automation_parsereleasestate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L62",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_62",
+      "target": "scripts_release_automation_parsereleasestate",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L298",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_main",
+      "target": "scripts_release_automation_checkrelease",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L132",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_preparerelease",
+      "target": "scripts_release_automation_checkrelease",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_94",
+      "target": "scripts_release_automation_checkrelease",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L306",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_main",
+      "target": "scripts_release_automation_preparerelease",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L108",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_108",
+      "target": "scripts_release_automation_preparerelease",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L181",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_classifyimpact",
+      "target": "scripts_release_automation_gitoutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L149",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_lockfilehasdependencychanges",
+      "target": "scripts_release_automation_gitoutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L136",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_136",
+      "target": "scripts_release_automation_gitoutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L163",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_workspacemanifesthasdependencychanges",
+      "target": "scripts_release_automation_gitoutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L192",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_classifyimpact",
+      "target": "scripts_release_automation_lockfilehasdependencychanges",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L148",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_148",
+      "target": "scripts_release_automation_lockfilehasdependencychanges",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L196",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_classifyimpact",
+      "target": "scripts_release_automation_workspacemanifesthasdependencychanges",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L162",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_162",
+      "target": "scripts_release_automation_workspacemanifesthasdependencychanges",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L308",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_main",
+      "target": "scripts_release_automation_classifyimpact",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L176",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_176",
+      "target": "scripts_release_automation_classifyimpact",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L262",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_buildissuereport",
+      "target": "scripts_release_automation_writegithuboutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L301",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_main",
+      "target": "scripts_release_automation_writegithuboutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L212",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_212",
+      "target": "scripts_release_automation_writegithuboutput",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L316",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_main",
+      "target": "scripts_release_automation_buildissuereport",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L225",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_225",
+      "target": "scripts_release_automation_buildissuereport",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L265",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_buildparser",
+      "target": "argumentparser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L293",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_main",
+      "target": "scripts_release_automation_buildparser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L266",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_266",
+      "target": "scripts_release_automation_buildparser",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/release_automation.py",
+      "source_location": "L292",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "scripts_release_automation_rationale_292",
+      "target": "scripts_release_automation_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "tests/conftest.py",
       "source_location": "L6",
       "weight": 1.0,
@@ -21092,6 +22292,105 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation",
+      "target": "tests_test_release_automation_releaseautomationtests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation_rationale_1",
+      "target": "tests_test_release_automation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation_rationale_18",
+      "target": "tests_test_release_automation_releaseautomationtests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation_releaseautomationtests",
+      "target": "tests_test_release_automation_releaseautomationtests_testpreparereleaseupdatesallpins",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation_releaseautomationtests",
+      "target": "tests_test_release_automation_releaseautomationtests_testvalidateversionacceptssemver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation_releaseautomationtests",
+      "target": "tests_test_release_automation_releaseautomationtests_testvalidateversionrejectsinvalidvalues",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation_rationale_21",
+      "target": "tests_test_release_automation_releaseautomationtests_testvalidateversionacceptssemver",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L27",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation_rationale_27",
+      "target": "tests_test_release_automation_releaseautomationtests_testvalidateversionrejectsinvalidvalues",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_release_automation.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "tests_test_release_automation_rationale_33",
+      "target": "tests_test_release_automation_releaseautomationtests_testpreparereleaseupdatesallpins",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "tests/test_search.py",
       "source_location": "L6",
       "weight": 1.0,
@@ -22009,7 +23308,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L95",
+      "source_location": "L96",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme",
@@ -22031,7 +23330,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L91",
+      "source_location": "L92",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_despatch",
@@ -22042,7 +23341,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L98",
+      "source_location": "L99",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_despatch",
@@ -22053,7 +23352,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L55",
+      "source_location": "L56",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_despatch",
@@ -22075,7 +23374,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0,
       "_origin": "ast",
       "source": "readme_despatch",
@@ -23070,5 +24369,6 @@
       "confidence": 1.0,
       "source_location": "docs/user/launcher.md"
     }
-  ]
+  ],
+  "built_at_commit": "dcee8c4da153bc9e6cb823a17553552f6e32d2f1"
 }

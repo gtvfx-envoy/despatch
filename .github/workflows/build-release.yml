@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   build-windows:
@@ -140,3 +141,26 @@ jobs:
         with:
           files: dist/despatch.exe
           fail_on_unmatched_files: true
+
+      - name: Read release state
+        if: startsWith(github.ref, 'refs/tags/')
+        id: release-state
+        shell: pwsh
+        run: python scripts/release_automation.py check --github-output $env:GITHUB_OUTPUT
+
+      - name: Close matching Envoy impact issue
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENVOY_TAG: ${{ steps.release-state.outputs.envoy_tag }}
+        run: |
+          $marker = "<!-- envoy-compatibility:$env:ENVOY_TAG -->"
+          $issue = gh issue list --state open --limit 100 --json number,body |
+              ConvertFrom-Json |
+              Where-Object { $_.body.Contains($marker) } |
+              Select-Object -First 1
+          if ($issue) {
+              gh issue close $issue.number `
+                  --comment "Released ${{ github.ref_name }} embedding $env:ENVOY_TAG."
+          fi

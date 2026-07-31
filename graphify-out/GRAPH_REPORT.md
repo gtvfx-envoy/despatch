@@ -1,13 +1,18 @@
 # Graph Report - despatch  (2026-07-30)
 
 ## Corpus Check
-- 58 files · ~26,104 words
+- 60 files · ~28,895 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 812 nodes · 1228 edges · 59 communities (53 shown, 6 thin omitted)
+- 855 nodes · 1300 edges · 60 communities (53 shown, 7 thin omitted)
 - Extraction: 98% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `dcee8c4d`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - EnvoyGateway
@@ -22,11 +27,11 @@
 - test_catalog.py
 - despatch/__init__.py
 - MainWindow
-- CatalogSnapshot
+- StackState
 - AutostartService
 - SingleInstance
 - _launch_worker.py
-- _globalPoint
+- TitleBar
 - render_ui.py
 - _theme.py
 - DespatchApplication
@@ -37,8 +42,8 @@
 - ._onStateLoaded
 - ._showErrorDialog
 - ._refreshViews
-- _models.py
-- _search.py
+- release_automation.py
+- .focusSearch
 - Stack Examples
 - test_settings.py
 - .__init__
@@ -48,7 +53,6 @@
 - ._requestCatalogRefresh
 - .start
 - Troubleshooting
-- TitleBar
 - test_search.py
 - Despatch
 - Bundle Manifests
@@ -65,6 +69,8 @@
 - Architecture
 - _activationReason
 - cli.md
+- ReleaseAutomationTests
+- .setReady
 
 ## God Nodes (most connected - your core abstractions)
 1. `DespatchApplication` - 34 edges
@@ -85,10 +91,10 @@
   tests/render_ui.py → py/despatch/_models.py
 - `makeSettingsDialog()` --references--> `SettingsDialog`  [EXTRACTED]
   tests/render_ui.py → py/despatch/_settings_dialog.py
-- `_createApplication()` --calls--> `loadProductIcon()`  [EXTRACTED]
-  py/despatch/__main__.py → py/despatch/_icons.py
 - `main()` --calls--> `DespatchApplication`  [EXTRACTED]
   py/despatch/__main__.py → py/despatch/_application.py
+- `main()` --calls--> `SingleInstance`  [EXTRACTED]
+  py/despatch/__main__.py → py/despatch/_single_instance.py
 
 ## Import Cycles
 - None detected.
@@ -97,7 +103,7 @@
 - **Stack Lifecycle** — Despatch, Stack, Bundle, Manifest, Catalog [1.0]
 - **UI Interaction Model** — LauncherWindow, TrayIcon, SearchIndex, Favorites, GlobalShortcut [1.0]
 
-## Communities (59 total, 6 thin omitted)
+## Communities (60 total, 7 thin omitted)
 
 ### Community 0 - "EnvoyGateway"
 Cohesion: 0.07
@@ -105,15 +111,15 @@ Nodes (34): EnvoyGateway, EnvoyUnavailableError, Any, ModuleType, Path, RuntimeE
 
 ### Community 1 - "StackMonitor"
 Cohesion: 0.07
-Nodes (27): Reflect Stack-monitor health independently from catalog status., Lightweight filesystem identity used to detect Stack updates., StackFileState, BaseException, Non-blocking polling for changes to an explicitly selected Stack., Disable monitoring and discard all selection-specific state., Pause scheduling while preserving the current selection and baseline., Resume a previously suspended explicit Stack monitor. (+19 more)
+Nodes (26): Reflect Stack-monitor health independently from catalog status., Lightweight filesystem identity used to detect Stack updates., StackFileState, BaseException, Disable monitoring and discard all selection-specific state., Pause scheduling while preserving the current selection and baseline., Resume a previously suspended explicit Stack monitor., Stop scheduling; any blocked daemon probe may finish independently. (+18 more)
 
 ### Community 2 - "SettingsStore"
 Cohesion: 0.05
 Nodes (31): _defaultData(), getDefaultSettingsPath(), _getEnvoyConfigRoot(), _nonEmptyEnvironmentPath(), Any, Path, Atomic persistence for Despatch user preferences., Theme preference: system, light, or dark. (+23 more)
 
 ### Community 3 - "ApplicationEntry"
-Cohesion: 0.09
-Nodes (26): CatalogLoader, getCurrentPlatform(), _ManifestRecord, Any, Path, Load Despatch manifests from active Envoy bundles., Read one manifest and report recoverable parse failures., Validate and construct applications from one manifest. (+18 more)
+Cohesion: 0.08
+Nodes (32): CatalogLoader, getCurrentPlatform(), _ManifestRecord, Any, Path, Load Despatch manifests from active Envoy bundles., Read one manifest and report recoverable parse failures., Validate and construct applications from one manifest. (+24 more)
 
 ### Community 4 - "Despatch"
 Cohesion: 0.10
@@ -124,12 +130,12 @@ Cohesion: 0.14
 Nodes (19): explicitState(), FakeUserConfig, makeApplication(), makeEnvoyModule(), testAutomaticModeUsesFullEnvoyDiscovery(), testAutomaticResolutionUnsetsStack(), testCustomStackFileStateUsesSelectedPathWithoutRegistryResolution(), testCustomStackPersistsCanonicalPath() (+11 more)
 
 ### Community 6 - "_documentation.py"
-Cohesion: 0.05
-Nodes (47): Logger, Popen, Constants shared by Despatch modules., DocumentationError, _DocumentationRequestHandler, _DocumentationServer, _documentationServerCommand(), getDocumentationSite() (+39 more)
+Cohesion: 0.06
+Nodes (40): Logger, Popen, DocumentationError, _DocumentationRequestHandler, _DocumentationServer, _documentationServerCommand(), getDocumentationSite(), _openBrowser() (+32 more)
 
 ### Community 7 - "_icons.py"
-Cohesion: 0.16
-Nodes (20): clearCache(), _extractLeadingMark(), _findResourceIcon(), _loadEmbeddedImageIcon(), _loadFileIcon(), loadPackagedIcon(), loadPathIcon(), loadProductIcon() (+12 more)
+Cohesion: 0.13
+Nodes (23): clearCache(), _extractLeadingMark(), _findResourceIcon(), _loadEmbeddedImageIcon(), _loadFileIcon(), loadPackagedIcon(), loadPathIcon(), loadProductIcon() (+15 more)
 
 ### Community 8 - "WindowsGlobalShortcut"
 Cohesion: 0.12
@@ -140,16 +146,16 @@ Cohesion: 0.33
 Nodes (16): FakeGateway, makeBundle(), testApplicationSuppressionKeepsSiblingsAndIgnoresMissingTargets(), testApplicationUsesGlobalGroupDeclaredByLaterBundle(), testApplicationWithUndeclaredGlobalGroupIsOmitted(), testBundleSuppressionIsCatalogWideAndPreservesSharedGroup(), testDuplicateGlobalGroupUsesFirstDeclarationAndLoadsApplications(), testInvalidSchemaIsRecoverable() (+8 more)
 
 ### Community 10 - "despatch/__init__.py"
-Cohesion: 0.23
-Nodes (6): Qt application coordinator for Despatch., Despatch is a tray-based launcher for Envoy-managed applications., Frameless search-first Despatch launcher window., Windows-first operating-system integrations., Despatch preference editor., System tray entry point and compact quick-access menu.
+Cohesion: 0.12
+Nodes (16): Qt application coordinator for Despatch., Constants shared by Despatch modules., Despatch is a tray-based launcher for Envoy-managed applications., Command-line entry point for the Despatch tray application., Frameless search-first Despatch launcher window., Typed domain models used by Despatch., The active Despatch Stack-resolution mode., StackMode (+8 more)
 
 ### Community 11 - "MainWindow"
-Cohesion: 0.05
-Nodes (24): Primary launcher window., MainWindow, Connect all UI events., Display a new catalog snapshot and user ranking state., Show a loading state and disable mutation controls., Restore interactive controls and display a status message., Display a recoverable catalog or launch error., Display a status message that cannot clear newer UI state. Args: message:… (+16 more)
+Cohesion: 0.08
+Nodes (17): MainWindow, Display a new catalog snapshot and user ranking state., Show a loading state and disable mutation controls., Display a recoverable catalog or launch error., Show or clear the dedicated Stack-monitor health warning. Args: message:…, Allow the next close event to destroy the window., Hide to tray unless application shutdown is in progress., Rebuild the visible catalog for the current query. (+9 more)
 
-### Community 12 - "CatalogSnapshot"
-Cohesion: 0.27
-Nodes (7): CatalogSnapshot, A complete immutable application catalog snapshot., DespatchTrayIcon, Return the compact label for the active Stack mode., Expose Despatch through asymmetric left- and right-click behavior., Update tray favorites and Stack actions., Rebuild the compact native context menu from current state.
+### Community 12 - "StackState"
+Cohesion: 0.14
+Nodes (13): Connect all UI events., Populate the Envoy Stack selector. Args: stacks: Available published Stacks.…, CatalogSnapshot, NamedStack, A complete immutable application catalog snapshot., A published Envoy Stack., The Stack resolution state used by the catalog and launch flow., StackState (+5 more)
 
 ### Community 13 - "AutostartService"
 Cohesion: 0.17
@@ -163,9 +169,9 @@ Nodes (9): Own a per-user local server or notify the existing instance., Whether
 Cohesion: 0.24
 Nodes (12): launchApplication(), main(), Any, ModuleType, Path, Isolated worker that dispatches one application through Envoy., Spawn an application through the Envoy Python API. Args: request: Validated…, Read and validate one JSON launch request from disk. (+4 more)
 
-### Community 16 - "_globalPoint"
-Cohesion: 0.22
-Nodes (6): _globalPoint(), Return a mouse event's global point across supported Qt versions., Show contextual actions for an application row., Begin a window drag from the custom title bar., Move the window during a fallback title-bar drag., QPoint
+### Community 16 - "TitleBar"
+Cohesion: 0.13
+Nodes (10): _globalPoint(), Build the launcher interface., Return a mouse event's global point across supported Qt versions., Custom title bar for the frameless launcher., Show contextual actions for an application row., Begin a window drag from the custom title bar., Move the window during a fallback title-bar drag., Finish a fallback title-bar drag. (+2 more)
 
 ### Community 17 - "render_ui.py"
 Cohesion: 0.19
@@ -176,8 +182,8 @@ Cohesion: 0.23
 Nodes (12): applyTheme(), _baseStyle(), _darkStyle(), _lightStyle(), QApplication, System-aware light and dark Qt styles., Apply the selected theme and return its resolved name. Args: application:…, Return the light theme stylesheet. (+4 more)
 
 ### Community 19 - "DespatchApplication"
-Cohesion: 0.18
-Nodes (7): DespatchApplication, Persist window state and stop the tray process., Persist an explicit Stack or enable Automatic resolution., Prompt for a custom `.estack` file and request its activation., Copy a platform-quoted Envoy command to the clipboard., Coordinate the window, tray, Envoy services, and background work., Dispatch completed future callbacks on the Qt main thread.
+Cohesion: 0.20
+Nodes (6): DespatchApplication, Primary launcher window., Persist window state and stop the tray process., Copy a platform-quoted Envoy command to the clipboard., Coordinate the window, tray, Envoy services, and background work., Dispatch completed future callbacks on the Qt main thread.
 
 ### Community 20 - "Docstring Standards"
 Cohesion: 0.10
@@ -207,13 +213,9 @@ Nodes (5): Create a retained non-modal error dialog., Release a deleted non-moda
 Cohesion: 0.25
 Nodes (4): Toggle a favorite and refresh both launch surfaces., Show settings and apply accepted changes transactionally., Apply the requested global shortcut registration., Refresh main and tray views from one state snapshot.
 
-### Community 28 - "_models.py"
-Cohesion: 0.20
-Nodes (9): Populate the Envoy Stack selector. Args: stacks: Available published Stacks.…, NamedStack, Typed domain models used by Despatch., A published Envoy Stack., The active Despatch Stack-resolution mode., The Stack resolution state used by the catalog and launch flow., StackMode, StackState (+1 more)
-
-### Community 29 - "_search.py"
-Cohesion: 0.32
-Nodes (7): _isSubsequence(), rankApplications(), Deterministic application search and ranking., Return applications ordered by text relevance and user preference. Args:…, Calculate a lower-is-better search score., Return whether query characters occur in order within text., _scoreApplication()
+### Community 28 - "release_automation.py"
+Cohesion: 0.12
+Nodes (32): ArgumentParser, Pattern, buildIssueReport(), buildParser(), checkRelease(), classifyImpact(), gitOutput(), lockfileHasDependencyChanges() (+24 more)
 
 ### Community 32 - "Stack Examples"
 Cohesion: 0.20
@@ -224,8 +226,8 @@ Cohesion: 0.29
 Nodes (5): _isDevModeEnabled(), Path, QApplication, Connect view requests to coordinator operations., Return whether Despatch should default to Automatic resolution.
 
 ### Community 35 - "._submit"
-Cohesion: 0.29
-Nodes (4): Any, Prepare and spawn a catalog application asynchronously., Open the Despatch documentation without blocking the Qt thread., Submit background work for polling on the Qt thread.
+Cohesion: 0.18
+Nodes (6): Any, Persist an explicit Stack or enable Automatic resolution., Prompt for a custom `.estack` file and request its activation., Prepare and spawn a catalog application asynchronously., Open the Despatch documentation without blocking the Qt thread., Submit background work for polling on the Qt thread.
 
 ### Community 36 - "._onCatalogRefreshError"
 Cohesion: 0.38
@@ -246,10 +248,6 @@ Nodes (3): Start the tray application and load its first catalog. Args: popup: S
 ### Community 40 - "Troubleshooting"
 Cohesion: 0.22
 Nodes (9): A Stack cannot be selected, An application fails to start, Applications do not appear, Documentation does not open, Stack update checks are unavailable, Start at sign in fails, The global shortcut cannot be enabled, The wrong Stack is active (+1 more)
-
-### Community 41 - "TitleBar"
-Cohesion: 0.29
-Nodes (4): Build the launcher interface., Custom title bar for the frameless launcher., Finish a fallback title-bar drag., TitleBar
 
 ### Community 42 - "test_search.py"
 Cohesion: 0.70
@@ -295,25 +293,33 @@ Nodes (3): Architecture, Responsibilities, Source and frozen execution
 Cohesion: 0.50
 Nodes (3): _activationReason(), Return a tray activation enum across Qt versions., Show the main UI only for a left-click activation.
 
+### Community 62 - "ReleaseAutomationTests"
+Cohesion: 0.20
+Nodes (6): Tests for Despatch release automation., Exercise deterministic release preparation., Valid SemVer values are returned unchanged., Invalid release values are rejected., Preparation synchronizes both versions and both Envoy defaults., ReleaseAutomationTests
+
+### Community 64 - ".setReady"
+Cohesion: 0.33
+Nodes (3): Restore interactive controls and display a status message., Display a status message that cannot clear newer UI state. Args: message:…, Clear a transient status only when no newer status replaced it.
+
 ## Knowledge Gaps
 - **81 isolated node(s):** `envoy-despatch`, `Inspect the packaging contract`, `Preserve frozen-runtime behavior`, `Keep dependency pins coherent`, `Build and validate` (+76 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **7 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `DespatchApplication` connect `DespatchApplication` to `StackMonitor`, `.__init__`, `._submit`, `._onCatalogRefreshError`, `._requestCatalogRefresh`, `.start`, `_documentation.py`, `despatch/__init__.py`, `MainWindow`, `._onStateLoaded`, `._showErrorDialog`, `._refreshViews`?**
-  _High betweenness centrality (0.113) - this node is a cross-community bridge._
-- **Why does `MainWindow` connect `MainWindow` to `.__init__`, `TitleBar`, `despatch/__init__.py`, `_globalPoint`, `render_ui.py`, `_models.py`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
+- **Why does `DespatchApplication` connect `DespatchApplication` to `StackMonitor`, `.__init__`, `._submit`, `._onCatalogRefreshError`, `._requestCatalogRefresh`, `.start`, `_documentation.py`, `despatch/__init__.py`, `._onStateLoaded`, `._showErrorDialog`, `._refreshViews`?**
+  _High betweenness centrality (0.102) - this node is a cross-community bridge._
+- **Why does `MainWindow` connect `MainWindow` to `.setReady`, `.__init__`, `despatch/__init__.py`, `StackState`, `TitleBar`, `render_ui.py`, `DespatchApplication`, `.focusSearch`?**
+  _High betweenness centrality (0.080) - this node is a cross-community bridge._
 - **Why does `SettingsStore` connect `SettingsStore` to `render_ui.py`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+  _High betweenness centrality (0.064) - this node is a cross-community bridge._
 - **What connects `envoy-despatch`, `Inspect the packaging contract`, `Preserve frozen-runtime behavior` to the rest of the system?**
   _81 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `EnvoyGateway` be split into smaller, more focused modules?**
   _Cohesion score 0.07138047138047138 - nodes in this community are weakly interconnected._
 - **Should `StackMonitor` be split into smaller, more focused modules?**
-  _Cohesion score 0.06914893617021277 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07246376811594203 - nodes in this community are weakly interconnected._
 - **Should `SettingsStore` be split into smaller, more focused modules?**
   _Cohesion score 0.05333333333333334 - nodes in this community are weakly interconnected._

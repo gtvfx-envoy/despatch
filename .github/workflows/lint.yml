@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python tests and Ruff
+    runs-on: [self-hosted, X64, Windows, synology]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Verify Envoy development runtime
+        run: envoy --info
+
+      - name: Run tests
+        run: envoy python -m pytest
+
+      - name: Run Ruff check
+        run: envoy python -m ruff check .
+
+      - name: Run Ruff format check
+        run: envoy python -m ruff format --check .
+
