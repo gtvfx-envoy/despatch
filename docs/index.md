@@ -51,3 +51,5 @@ surface for a selected Envoy **Stack**, which is an ordered collection of
 
 For Envoy concepts beyond what Despatch needs, see the
 [complete Envoy documentation](https://gtvfx-envoy.github.io/envoy/).
+
+Maintainers should follow the [Envoy maintainer release guide](https://gtvfx-envoy.github.io/envoy/maintainers/releasing/) for coordinated Envoy, Envoy Utils, and Despatch releases.

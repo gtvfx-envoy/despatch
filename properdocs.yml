@@ -56,3 +56,4 @@ nav:
     - CLI Reference: technical/cli.md
   - Examples: examples.md
   - Troubleshooting: troubleshooting.md
+  - Maintainer Release Guide: https://gtvfx-envoy.github.io/envoy/maintainers/releasing/
