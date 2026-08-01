@@ -15,7 +15,7 @@ _ICON_CACHE: dict[str, QtGui.QIcon] = {}
 
 def loadProductIcon() -> QtGui.QIcon:
     """Return the packaged Despatch product icon."""
-    return loadPackagedIcon("despatch.svg")
+    return loadPackagedIcon("despatch_icon_charcoal_1024.png")
 
 
 def loadPackagedIcon(icon_name: str) -> QtGui.QIcon:

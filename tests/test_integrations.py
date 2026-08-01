@@ -8,9 +8,9 @@ from despatch import _icons, _models, _platform, _single_instance, _theme, _tray
 
 
 def testProductIconUsesRepositoryResources(qapp):
-    icon_path = _icons._findResourceIcon("despatch.svg")
+    icon_path = _icons._findResourceIcon("despatch_icon_charcoal_1024.png")
 
-    assert icon_path == Path(__file__).parents[1] / "resources" / "icons" / "despatch.svg"
+    assert icon_path == Path(__file__).parents[1] / "resources" / "icons" / "despatch_icon_charcoal_1024.png"
     assert not _icons.loadProductIcon().isNull()
 
 

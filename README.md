@@ -1,3 +1,4 @@
+![Repository Banner](./resources/despatch_repository_banner_v4.png)
 # Despatch
 
 Despatch is a Windows-first system tray launcher for applications managed by

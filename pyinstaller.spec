@@ -67,5 +67,5 @@ executable = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(RESOURCE_ROOT / "icons" / "envoy_128.ico"),
+    icon=str(RESOURCE_ROOT / "icons" / "despatch.ico"),
 )
