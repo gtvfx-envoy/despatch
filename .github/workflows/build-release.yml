@@ -159,4 +159,4 @@ jobs:
           if ($issue) {
               gh issue close $issue.number `
                   --comment "Released ${{ github.ref_name }} embedding $env:ENVOY_TAG."
-          fi
+          }
