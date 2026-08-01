@@ -22,6 +22,8 @@ jobs:
     runs-on: [self-hosted, X64, Windows, synology]
     env:
       ENVOY_RELEASE: ${{ inputs.envoy_release || 'v0.5.1' }}
+      ENVOY_BUILD_STACK: ${{ vars.ENVOY_BUILD_STACK }}
+      ENVOY_STACK: ${{ vars.ENVOY_BUILD_STACK }}
 
     steps:
       - name: Checkout
@@ -40,17 +42,27 @@ jobs:
           .\scripts\install-envoy-release.ps1
           -ReleaseTag "$env:ENVOY_RELEASE"
 
-      - name: Install build dependencies
+      - name: Validate build Stack
         shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install '.[executable,docs]'
+          if ([string]::IsNullOrWhiteSpace($env:ENVOY_BUILD_STACK)) {
+            throw 'Set the ENVOY_BUILD_STACK repository Actions variable.'
+          }
+          if (-not (Test-Path -LiteralPath $env:ENVOY_BUILD_STACK -PathType Leaf)) {
+            throw "Envoy build Stack is unavailable: '$env:ENVOY_BUILD_STACK'."
+          }
+
+      - name: Install executable build tools
+        shell: pwsh
+        run: |
+          $sitePackages = Join-Path $env:ENVOY_SITE_PACKAGES 'Python311\site-packages'
+          python -m pip install `
+            --disable-pip-version-check --upgrade --target $sitePackages `
+            '.[docs]' 'PyInstaller==6.21.0'
 
       - name: Build executable
         shell: pwsh
-        run: |
-          $python = (Get-Command python -ErrorAction Stop).Source
-          .\scripts\build-executable.ps1 -PythonExecutable $python -SkipToolInstall
+        run: .\scripts\build-executable.ps1 -SkipToolInstall
 
       - name: Verify executable starts
         shell: pwsh

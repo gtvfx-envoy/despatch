@@ -54,6 +54,7 @@ despatch = "py/despatch"
 
 [tool.pytest.ini_options]
 addopts = "-ra"
+pythonpath = ["py"]
 testpaths = ["tests"]
 
 [tool.ruff]

@@ -77,6 +77,9 @@ jobs:
     needs: classify
     if: needs.classify.outputs.relevant == 'true'
     runs-on: [self-hosted, X64, Windows, synology]
+    env:
+      ENVOY_BUILD_STACK: ${{ vars.ENVOY_BUILD_STACK }}
+      ENVOY_STACK: ${{ vars.ENVOY_BUILD_STACK }}
 
     steps:
       - name: Checkout Despatch
@@ -97,14 +100,26 @@ jobs:
           .\scripts\install-envoy-release.ps1
           -ReleaseTag "$env:ENVOY_TAG"
 
+      - name: Validate build Stack
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:ENVOY_BUILD_STACK)) {
+            throw 'Set the ENVOY_BUILD_STACK repository Actions variable.'
+          }
+          if (-not (Test-Path -LiteralPath $env:ENVOY_BUILD_STACK -PathType Leaf)) {
+            throw "Envoy build Stack is unavailable: '$env:ENVOY_BUILD_STACK'."
+          }
+
       - name: Install development dependencies
         id: install
         continue-on-error: true
         shell: pwsh
         run: |
           $PSNativeCommandUseErrorActionPreference = $true
-          python -m pip install --upgrade pip
-          python -m pip install --editable '.[dev,executable,docs]'
+          $sitePackages = Join-Path $env:ENVOY_SITE_PACKAGES 'Python311\site-packages'
+          python -m pip install `
+            --disable-pip-version-check --upgrade --target $sitePackages `
+            '.[dev,docs]' 'PyInstaller==6.21.0'
 
       - name: Run source tests and lint
         id: source
@@ -112,17 +127,15 @@ jobs:
         shell: pwsh
         run: |
           $PSNativeCommandUseErrorActionPreference = $true
-          python -m pytest
-          python -m ruff check .
-          python -m ruff format --check .
+          envoy --stack="$env:ENVOY_BUILD_STACK" python -m pytest
+          envoy --stack="$env:ENVOY_BUILD_STACK" python -m ruff check .
+          envoy --stack="$env:ENVOY_BUILD_STACK" python -m ruff format --check .
 
       - name: Build final windowed executable
         id: build
         continue-on-error: true
         shell: pwsh
-        run: |
-          $python = (Get-Command python -ErrorAction Stop).Source
-          .\scripts\build-executable.ps1 -PythonExecutable $python -SkipToolInstall
+        run: .\scripts\build-executable.ps1 -SkipToolInstall
 
       - name: Validate final executable
         id: executable

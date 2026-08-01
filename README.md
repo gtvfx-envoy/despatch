@@ -89,12 +89,12 @@ also attach `despatch.exe` to the corresponding GitHub Release. The workflow
 pins the Envoy release embedded into the executable and exposes an override for
 manual compatibility builds.
 
-Windows CI jobs bootstrap that pinned Envoy release into an isolated environment
-under the runner's temporary directory. Self-hosted runners do not need a global
-Envoy installation. They require PowerShell, access to GitHub release assets,
-and the Python version configured by each workflow. The bootstrap verifies the
-published Windows bundle and Python wheel against Envoy's `SHA256SUMS` before
-installation.
+Windows CI jobs bootstrap that pinned Envoy release under the runner's temporary
+directory. The `ENVOY_BUILD_STACK` repository Actions variable selects the
+shared Stack used for Python commands. That Stack supplies Python 3.11, PySide6,
+and Qt.py from Envoy Bundles, while the bootstrap exposes the pinned Envoy Python
+API through `ENVOY_SITE_PACKAGES`. The Windows bundle and Python wheel are both
+verified against Envoy's `SHA256SUMS` before installation.
 
 ## Application manifests
 

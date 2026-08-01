@@ -33,13 +33,11 @@ if (Test-Path -LiteralPath $environment_path) {
     throw "Envoy environment already exists: '$environment_path'."
 }
 
-Write-Host "Creating an isolated Envoy environment at '$environment_path'."
-& $resolved_python -m venv $environment_path
-$environment_python = Join-Path $environment_path "Scripts\python.exe"
-$environment_scripts = Join-Path $environment_path "Scripts"
-if (-not (Test-Path -LiteralPath $environment_python -PathType Leaf)) {
-    throw "Python did not create '$environment_python'."
-}
+Write-Host "Creating an isolated Envoy installation at '$environment_path'."
+New-Item -ItemType Directory -Path $environment_path | Out-Null
+$site_packages_root = Join-Path $environment_path "site-packages"
+$python_site_packages = Join-Path $site_packages_root "Python311\site-packages"
+New-Item -ItemType Directory -Path $python_site_packages -Force | Out-Null
 
 $headers = @{
     Accept = "application/vnd.github+json"
@@ -110,12 +108,15 @@ foreach ($asset_path in ($wheel_path, $archive_path)) {
     Write-Host "Verified $asset_name ($actual_checksum)."
 }
 
-& $environment_python -m pip install `
+& $resolved_python -m pip install `
     --disable-pip-version-check `
-    --force-reinstall `
     --no-deps `
+    --target `
+    $python_site_packages `
     $wheel_path
-& $environment_python -c "import envoy; print('Envoy Python API', envoy.__version__)"
+$env:PYTHONPATH = $python_site_packages
+& $resolved_python -c "import envoy; print('Envoy Python API', envoy.__version__)"
+$env:PYTHONPATH = $null
 
 $release_directory = Join-Path $environment_path "release"
 Expand-Archive -LiteralPath $archive_path -DestinationPath $release_directory
@@ -126,40 +127,16 @@ if (-not (Test-Path -LiteralPath $envoy_executable -PathType Leaf)) {
 }
 & $envoy_executable --version
 
-$repository_root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
-$runtime_bundles = Join-Path $environment_path "bundles"
-$python_bundle = Join-Path $runtime_bundles "python"
-$python_envoy_directory = Join-Path $python_bundle ".envoy"
-$python_checkout_directory = Join-Path $python_bundle ".git"
 $config_root = Join-Path $environment_path "config"
-New-Item -ItemType Directory -Path $python_envoy_directory | Out-Null
-New-Item -ItemType Directory -Path $python_checkout_directory | Out-Null
 New-Item -ItemType Directory -Path $config_root | Out-Null
-@{
-    python = @{
-        environment = @()
-        alias = @($environment_python)
-    }
-} | ConvertTo-Json -Depth 4 |
-    Set-Content -LiteralPath (Join-Path $python_envoy_directory "commands.json") -Encoding utf8
-
-$bundle_roots = "$repository_root$([IO.Path]::PathSeparator)$runtime_bundles"
-$env:ENVOY_BNDL_ROOTS = $bundle_roots
-$env:ENVOY_CONFIG_ROOT = $config_root
-$env:ENVOY_DISABLE_DISCOVERY_CACHE = "1"
-& $envoy_executable --ignore-config --info python
 
 if ($env:GITHUB_PATH) {
-    Add-Content -LiteralPath $env:GITHUB_PATH -Value $environment_scripts
     Add-Content -LiteralPath $env:GITHUB_PATH -Value $envoy_directory
 }
 if ($env:GITHUB_ENV) {
-    Add-Content -LiteralPath $env:GITHUB_ENV -Value "VIRTUAL_ENV=$environment_path"
-    Add-Content -LiteralPath $env:GITHUB_ENV -Value "DESPATCH_CI_PYTHON=$environment_python"
     Add-Content -LiteralPath $env:GITHUB_ENV -Value "DESPATCH_CI_ENVOY=$envoy_executable"
-    Add-Content -LiteralPath $env:GITHUB_ENV -Value "ENVOY_BNDL_ROOTS=$bundle_roots"
+    Add-Content -LiteralPath $env:GITHUB_ENV -Value "ENVOY_SITE_PACKAGES=$site_packages_root"
     Add-Content -LiteralPath $env:GITHUB_ENV -Value "ENVOY_CONFIG_ROOT=$config_root"
-    Add-Content -LiteralPath $env:GITHUB_ENV -Value "ENVOY_DISABLE_DISCOVERY_CACHE=1"
 }
 
 Write-Host "Envoy '$ReleaseTag' is available at '$envoy_executable'."

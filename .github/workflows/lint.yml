@@ -13,6 +13,9 @@ jobs:
   python:
     name: Python tests and Ruff
     runs-on: [self-hosted, X64, Windows, synology]
+    env:
+      ENVOY_BUILD_STACK: ${{ vars.ENVOY_BUILD_STACK }}
+      ENVOY_STACK: ${{ vars.ENVOY_BUILD_STACK }}
 
     steps:
       - name: Checkout
@@ -36,22 +39,34 @@ jobs:
           .\scripts\install-envoy-release.ps1
           -ReleaseTag "${{ steps.release-state.outputs.envoy_tag }}"
 
+      - name: Validate build Stack
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:ENVOY_BUILD_STACK)) {
+            throw 'Set the ENVOY_BUILD_STACK repository Actions variable.'
+          }
+          if (-not (Test-Path -LiteralPath $env:ENVOY_BUILD_STACK -PathType Leaf)) {
+            throw "Envoy build Stack is unavailable: '$env:ENVOY_BUILD_STACK'."
+          }
+
       - name: Install development dependencies
         shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install --editable '.[dev,executable]'
+          $sitePackages = Join-Path $env:ENVOY_SITE_PACKAGES 'Python311\site-packages'
+          python -m pip install `
+            --disable-pip-version-check --upgrade --target $sitePackages '.[dev]'
 
       - name: Verify Envoy development runtime
         run: |
           envoy --version
-          envoy --info python
+          envoy --stack="$env:ENVOY_BUILD_STACK" --info python
+          envoy --stack="$env:ENVOY_BUILD_STACK" python -c "import envoy, Qt, PySide6; print(envoy.__version__, Qt.__binding__, PySide6.__version__)"
 
       - name: Run tests
-        run: envoy python -m pytest
+        run: envoy --stack="$env:ENVOY_BUILD_STACK" python -m pytest
 
       - name: Run Ruff check
-        run: envoy python -m ruff check .
+        run: envoy --stack="$env:ENVOY_BUILD_STACK" python -m ruff check .
 
       - name: Run Ruff format check
-        run: envoy python -m ruff format --check .
+        run: envoy --stack="$env:ENVOY_BUILD_STACK" python -m ruff format --check .
