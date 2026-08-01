@@ -1,5 +1,12 @@
 # Despatch
 
+<p class="despatch-hero">
+  <img
+    src="assets/despatch_documentation_header_v4.png"
+    alt="Despatch — Launch the right application in the right environment"
+  >
+</p>
+
 **A fast application launcher for Envoy-managed environments.** Despatch turns
 the applications declared by your team's Envoy bundles into a searchable
 desktop launcher, while Envoy continues to assemble and isolate each

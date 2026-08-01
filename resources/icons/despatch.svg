@@ -1,10 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#B6A8FF"/>
-      <stop offset="1" stop-color="#6654D9"/>
-    </linearGradient>
-  </defs>
-  <rect x="4" y="4" width="56" height="56" rx="17" fill="url(#g)"/>
-  <path d="M19 19h13c9 0 15 5 15 13S41 45 32 45H19V19zm9 7v12h4c5 0 8-2 8-6s-3-6-8-6h-4z" fill="white"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="330" height="335"
+     viewBox="0 0 330 335">
+  <title>Despatch Corrected Master Glyph</title>
+  <desc>
+    Vector master traced from the approved Despatch source:
+    heavy D, contained stepped arrow, and lower-left circuit pin.
+  </desc>
+
+  <g id="despatch-master">
+    <path id="despatch-d"
+          d="
+M36 20
+H211
+C263 20 303 62 303 116
+V208
+C303 265 261 311 202 311
+H36
+Z
+
+M81 64
+H197
+C233 64 258 88 258 122
+V206
+C258 238 232 264 197 264
+H81
+Z
+"
+          fill="#4A525C"
+          fill-rule="evenodd"/>
+
+    <path id="launch-arrow"
+          d="
+M218 112
+H144
+V136
+H178
+L119 198
+V230
+L194 155
+V190
+H219
+Z
+"
+          fill="#FF8A00"/>
+
+    <g id="circuit-pin"
+       fill="none"
+       stroke="#FF8A00"
+       stroke-linejoin="miter">
+      <path d="M68 238 H57 V292 H116"
+            stroke-width="10"
+            stroke-linecap="square"/>
+      <circle cx="128" cy="292" r="12"
+              stroke-width="7"/>
+    </g>
+  </g>
 </svg>

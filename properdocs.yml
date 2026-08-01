@@ -7,10 +7,12 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  logo: assets/despatch_icon_charcoal_1024.png
+  favicon: assets/despatch.ico
   palette:
     scheme: slate
-    primary: indigo
-    accent: indigo
+    primary: custom
+    accent: custom
   features:
     - navigation.tabs
     - navigation.sections
@@ -40,6 +42,9 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+
+extra_css:
+  - stylesheets/extra.css
 
 nav:
   - Home: index.md
