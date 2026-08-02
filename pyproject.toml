@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "envoy-despatch"
-version = "0.1.0"
+version = "0.1.1"
 description = "System tray application launcher for the Envoy runtime"
 readme = "README.md"
 license = { file = "LICENSE" }
