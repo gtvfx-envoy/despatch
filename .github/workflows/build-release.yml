@@ -146,17 +146,33 @@ jobs:
 
       - name: Close matching Envoy impact issue
         if: startsWith(github.ref, 'refs/tags/')
-        shell: pwsh
+        uses: actions/github-script@v8
         env:
-          GH_TOKEN: ${{ github.token }}
           ENVOY_TAG: ${{ steps.release-state.outputs.envoy_tag }}
-        run: |
-          $marker = "<!-- envoy-compatibility:$env:ENVOY_TAG -->"
-          $issue = gh issue list --state open --limit 100 --json number,body |
-              ConvertFrom-Json |
-              Where-Object { $_.body.Contains($marker) } |
-              Select-Object -First 1
-          if ($issue) {
-              gh issue close $issue.number `
-                  --comment "Released ${{ github.ref_name }} embedding $env:ENVOY_TAG."
-          }
+          RELEASE_TAG: ${{ github.ref_name }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const marker = `<!-- envoy-compatibility:${process.env.ENVOY_TAG} -->`;
+            const {data: issues} = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const issue = issues.find(candidate => candidate.body?.includes(marker));
+            if (issue === undefined) {
+              return;
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `Released ${process.env.RELEASE_TAG} embedding ${process.env.ENVOY_TAG}.`,
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              state: 'closed',
+            });

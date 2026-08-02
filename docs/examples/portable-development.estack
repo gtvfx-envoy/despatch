@@ -1,4 +1,3 @@
-name: development
 namespace: studio:development
 metadata:
   owner: developer-experience

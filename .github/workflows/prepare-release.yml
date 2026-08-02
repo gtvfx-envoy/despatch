@@ -81,18 +81,35 @@ jobs:
           --version "${{ inputs.version }}"
           --envoy-version "${{ inputs.envoy_version }}"
 
-      - name: Validate source
-        run: |
-          envoy --stack="$env:ENVOY_BUILD_STACK" python -m pytest
-          envoy --stack="$env:ENVOY_BUILD_STACK" python -m ruff check .
-          envoy --stack="$env:ENVOY_BUILD_STACK" python -m ruff format --check .
+      - name: Test source
+        run: envoy --stack="$env:ENVOY_BUILD_STACK" python -m pytest
+
+      - name: Lint source
+        run: envoy --stack="$env:ENVOY_BUILD_STACK" python -m ruff check .
+
+      - name: Check source formatting
+        run: envoy --stack="$env:ENVOY_BUILD_STACK" python -m ruff format --check .
 
       - name: Ensure release preparation label exists
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: >-
-          gh label create release-prep --color 5319E7 --force
-          --description "Automated release preparation pull request"
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const label = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'release-prep',
+              color: '5319E7',
+              description: 'Automated release preparation pull request',
+            };
+            try {
+              await github.rest.issues.updateLabel(label);
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+              await github.rest.issues.createLabel(label);
+            }
 
       - name: Create or update draft pull request
         uses: peter-evans/create-pull-request@v8

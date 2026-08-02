@@ -34,7 +34,7 @@ def testMinimalStackExampleLoads(tmp_path):
         },
     )
 
-    assert stack.name == "workstation"
+    assert stack.name == "minimal"
     assert stack.namespace == "gt"
 
 
@@ -55,6 +55,7 @@ def testPortableStackExampleLoads(monkeypatch, tmp_path):
         {},
     )
 
+    assert stack.name == "portable-development"
     assert stack.namespace == "studio:development"
     assert stack.metadata["owner"] == "developer-experience"
     assert len(stack.bundles) == 3
@@ -75,6 +76,7 @@ def testProductionStackExampleLoads(monkeypatch, tmp_path):
         {},
     )
 
+    assert stack.name == "production"
     assert stack.pinned_version == "2026.07"
     assert stack.metadata["tier"] == "production"
     assert len(stack.bundles) == 3

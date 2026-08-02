@@ -3,12 +3,13 @@
 These examples use contrived bundle locations. Replace them with paths to real
 Envoy bundles before loading the files.
 
+Each Stack's filename supplies its name; `name` is not a Stack document field.
+
 ## Minimal workstation Stack
 
 [Download `minimal.estack`](examples/minimal.estack){ .md-button }
 
 ```yaml
-name: workstation
 bundles:
   - path: C:/studio/bundles/globals
   - path: C:/studio/bundles/creative-tools
@@ -22,7 +23,6 @@ in the declared order.
 [Download `portable-development.estack`](examples/portable-development.estack){ .md-button }
 
 ```yaml
-name: development
 namespace: studio:development
 metadata:
   owner: developer-experience
@@ -48,7 +48,6 @@ machine loading it.
 [Download `production.estack`](examples/production.estack){ .md-button }
 
 ```yaml
-name: production
 namespace: studio:lighting
 source:
   type: local
