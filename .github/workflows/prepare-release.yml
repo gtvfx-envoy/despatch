@@ -7,8 +7,8 @@ on:
         description: Unprefixed Despatch semantic version
         required: true
         type: string
-      envoy_tag:
-        description: Published Envoy release tag to embed
+      envoy_version:
+        description: Unprefixed published Envoy semantic version to embed
         required: true
         type: string
 
@@ -26,6 +26,7 @@ jobs:
     env:
       ENVOY_BUILD_STACK: ${{ vars.ENVOY_BUILD_STACK }}
       ENVOY_STACK: ${{ vars.ENVOY_BUILD_STACK }}
+      ENVOY_TAG: v${{ inputs.envoy_version }}
 
     steps:
       - name: Create release automation token
@@ -55,7 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: >-
           .\scripts\install-envoy-release.ps1
-          -ReleaseTag "${{ inputs.envoy_tag }}"
+          -ReleaseTag "$env:ENVOY_TAG"
 
       - name: Validate build Stack
         shell: pwsh
@@ -78,7 +79,7 @@ jobs:
         run: >-
           envoy --stack="$env:ENVOY_BUILD_STACK" python scripts/release_automation.py prepare
           --version "${{ inputs.version }}"
-          --envoy-tag "${{ inputs.envoy_tag }}"
+          --envoy-version "${{ inputs.envoy_version }}"
 
       - name: Validate source
         run: |
@@ -105,7 +106,7 @@ jobs:
             Automated Despatch release preparation.
 
             - Synchronizes the Python package version.
-            - Pins the executable build to Envoy `${{ inputs.envoy_tag }}`.
+            - Pins the executable build to Envoy `v${{ inputs.envoy_version }}`.
             - Runs the source release-readiness checks.
 
             Merge only after the normal pull request checks pass.

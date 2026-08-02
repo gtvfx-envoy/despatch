@@ -33,6 +33,11 @@ def validateVersion(version: str) -> str:
     return version
 
 
+def versionToTag(version: str) -> str:
+    """Convert an unprefixed semantic version to its Git tag."""
+    return f"v{validateVersion(version)}"
+
+
 def validateTag(tag: str) -> str:
     """Validate and return a v-prefixed semantic-version tag."""
     if not tag.startswith("v"):
@@ -64,16 +69,21 @@ def parseReleaseState(repository_root: Path) -> dict:
     init_contents = (repository_root / "py" / "despatch" / "__init__.py").read_text(
         encoding="utf-8"
     )
-    workflow_contents = (repository_root / ".github" / "workflows" / "build-release.yml").read_text(
-        encoding="utf-8"
-    )
+    workflow_path = repository_root / ".github" / "workflows" / "build-release.yml"
+    workflow_contents = workflow_path.read_text(encoding="utf-8")
     project_match = re.search(
         r'(?ms)^\[project\]\s*.*?^version\s*=\s*"([^"]+)"$',
         pyproject_contents,
     )
     init_match = re.search(r'(?m)^__version__\s*=\s*"([^"]+)"$', init_contents)
-    workflow_tags = re.findall(r"v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?", workflow_contents)
-    if project_match is None or init_match is None or len(workflow_tags) != 2:
+    workflow_default_match = re.search(r"(?m)^\s+default:\s+([^\s]+)$", workflow_contents)
+    workflow_fallback_match = re.search(r"inputs\.envoy_version \|\| '([^']+)'", workflow_contents)
+    if (
+        project_match is None
+        or init_match is None
+        or workflow_default_match is None
+        or workflow_fallback_match is None
+    ):
         raise RuntimeError("Despatch release versions or Envoy workflow defaults are malformed.")
     project_version = project_match.group(1)
     init_version = init_match.group(1)
@@ -81,15 +91,19 @@ def parseReleaseState(repository_root: Path) -> dict:
         raise RuntimeError(
             f"pyproject.toml version {project_version} disagrees with __init__ {init_version}."
         )
-    if len(set(workflow_tags)) != 1:
-        raise RuntimeError(f"Envoy workflow defaults disagree: {workflow_tags}")
-    return {"version": project_version, "envoy_tag": workflow_tags[0]}
+    workflow_versions = [
+        validateVersion(workflow_default_match.group(1)),
+        validateVersion(workflow_fallback_match.group(1)),
+    ]
+    if len(set(workflow_versions)) != 1:
+        raise RuntimeError(f"Envoy workflow defaults disagree: {workflow_versions}")
+    return {"version": project_version, "envoy_tag": versionToTag(workflow_versions[0])}
 
 
 def checkRelease(
     repository_root: Path,
     expected_version: str | None = None,
-    expected_envoy_tag: str | None = None,
+    expected_envoy_version: str | None = None,
 ) -> dict:
     """Validate Despatch release versions and the embedded Envoy pin."""
     state = parseReleaseState(repository_root)
@@ -97,17 +111,17 @@ def checkRelease(
     validateTag(state["envoy_tag"])
     if expected_version and state["version"] != validateVersion(expected_version):
         raise RuntimeError(f"Expected Despatch {expected_version}, found {state['version']}.")
-    if expected_envoy_tag and state["envoy_tag"] != validateTag(expected_envoy_tag):
+    if expected_envoy_version and state["envoy_tag"] != versionToTag(expected_envoy_version):
         raise RuntimeError(
-            f"Expected embedded Envoy {expected_envoy_tag}, found {state['envoy_tag']}."
+            f"Expected embedded Envoy v{expected_envoy_version}, found {state['envoy_tag']}."
         )
     return state
 
 
-def prepareRelease(repository_root: Path, version: str, envoy_tag: str) -> None:
+def prepareRelease(repository_root: Path, version: str, envoy_version: str) -> None:
     """Synchronize the Despatch version and both embedded Envoy defaults."""
     validated_version = validateVersion(version)
-    validated_tag = validateTag(envoy_tag)
+    validated_envoy_version = validateVersion(envoy_version)
     replaceExactly(
         repository_root / "pyproject.toml",
         re.compile(r'(?ms)(^\[project\]\s*.*?)^version\s*=\s*"[^"]+"$'),
@@ -122,14 +136,22 @@ def prepareRelease(repository_root: Path, version: str, envoy_tag: str) -> None:
         1,
         "package version",
     )
+    workflow_path = repository_root / ".github" / "workflows" / "build-release.yml"
     replaceExactly(
-        repository_root / ".github" / "workflows" / "build-release.yml",
-        re.compile(r"v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?"),
-        validated_tag,
-        2,
-        "Envoy release pin",
+        workflow_path,
+        re.compile(r"(?m)(^\s+default:\s+)[^\s]+$"),
+        rf"\g<1>{validated_envoy_version}",
+        1,
+        "Envoy release input default",
     )
-    checkRelease(repository_root, validated_version, validated_tag)
+    replaceExactly(
+        workflow_path,
+        re.compile(r"(inputs\.envoy_version \|\| ')[^']+(')"),
+        rf"\g<1>{validated_envoy_version}\g<2>",
+        1,
+        "Envoy release fallback",
+    )
+    checkRelease(repository_root, validated_version, validated_envoy_version)
 
 
 def gitOutput(repository_root: Path, arguments: list[str]) -> str:
@@ -254,7 +276,7 @@ Envoy {impact['head_tag']} was released after the currently embedded {impact['ba
 
 - [ ] Review behavioral changes, even if all automated checks pass.
 - [ ] Decide whether a Despatch release should embed this Envoy runtime.
-- [ ] If releasing, use **Prepare Release** with Envoy tag `{impact['head_tag']}`.
+- [ ] If releasing, use **Prepare Release** with Envoy version `{impact['head_tag'][1:]}`.
 - [ ] If no release is needed, close this issue with the rationale.
 """
     output_path.write_text(body, encoding="utf-8")
@@ -268,11 +290,11 @@ def buildParser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
     check_parser = subparsers.add_parser("check")
     check_parser.add_argument("--expect-version")
-    check_parser.add_argument("--expect-envoy-tag")
+    check_parser.add_argument("--expect-envoy-version")
     check_parser.add_argument("--github-output")
     prepare_parser = subparsers.add_parser("prepare")
     prepare_parser.add_argument("--version", required=True)
-    prepare_parser.add_argument("--envoy-tag", required=True)
+    prepare_parser.add_argument("--envoy-version", required=True)
     impact_parser = subparsers.add_parser("impact")
     impact_parser.add_argument("--envoy-root", required=True)
     impact_parser.add_argument("--base-tag", required=True)
@@ -295,7 +317,7 @@ def main(arguments: list[str] | None = None) -> int:
     repository_root = Path(__file__).resolve().parent.parent
     try:
         if args.command == "check":
-            state = checkRelease(repository_root, args.expect_version, args.expect_envoy_tag)
+            state = checkRelease(repository_root, args.expect_version, args.expect_envoy_version)
             print(f"Despatch v{state['version']} embeds Envoy {state['envoy_tag']}.")
             if args.github_output:
                 writeGitHubOutput(
@@ -303,7 +325,7 @@ def main(arguments: list[str] | None = None) -> int:
                     {"version": state["version"], "envoy_tag": state["envoy_tag"]},
                 )
         elif args.command == "prepare":
-            prepareRelease(repository_root, args.version, args.envoy_tag)
+            prepareRelease(repository_root, args.version, args.envoy_version)
         elif args.command == "impact":
             result = classifyImpact(Path(args.envoy_root), args.base_tag, args.head_tag)
             Path(args.output).write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")

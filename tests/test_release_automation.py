@@ -29,6 +29,12 @@ class ReleaseAutomationTests(unittest.TestCase):
             with self.subTest(version=version), self.assertRaises(ValueError):
                 release_automation.validateVersion(version)
 
+    def testVersionToTag(self):
+        """Unprefixed dependency versions convert to Git tags."""
+        self.assertEqual(release_automation.versionToTag("0.6.1"), "v0.6.1")
+        with self.assertRaises(ValueError):
+            release_automation.versionToTag("v0.6.1")
+
     def testPrepareReleaseUpdatesAllPins(self):
         """Preparation synchronizes both versions and both Envoy defaults."""
         temporary_directory = self.enterContext(tempfile.TemporaryDirectory())
@@ -43,11 +49,11 @@ class ReleaseAutomationTests(unittest.TestCase):
             '__version__ = "0.1.0"\n', encoding="utf-8"
         )
         (repository_root / ".github" / "workflows" / "build-release.yml").write_text(
-            "default: v0.5.1\nenv: ${{ inputs.envoy_release || 'v0.5.1' }}\n",
+            "        default: 0.5.1\nenv: v${{ inputs.envoy_version || '0.5.1' }}\n",
             encoding="utf-8",
         )
-        release_automation.prepareRelease(repository_root, "0.2.0", "v0.6.0")
-        state = release_automation.checkRelease(repository_root, "0.2.0", "v0.6.0")
+        release_automation.prepareRelease(repository_root, "0.2.0", "0.6.0")
+        state = release_automation.checkRelease(repository_root, "0.2.0", "0.6.0")
         self.assertEqual(state, {"version": "0.2.0", "envoy_tag": "v0.6.0"})
 
 
