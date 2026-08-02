@@ -9,7 +9,7 @@ on:
       envoy_version:
         description: Unprefixed Envoy semantic version to embed in the executable
         required: true
-        default: 0.5.1
+        default: 0.6.2
         type: string
 
 permissions:
@@ -21,9 +21,9 @@ jobs:
     name: Build Windows executable
     runs-on: [self-hosted, X64, Windows, synology]
     env:
-      ENVOY_RELEASE: v${{ inputs.envoy_version || '0.5.1' }}
-      ENVOY_BUILD_STACK: ${{ vars.ENVOY_BUILD_STACK }}
-      ENVOY_STACK: ${{ vars.ENVOY_BUILD_STACK }}
+      ENVOY_RELEASE: v${{ inputs.envoy_version || '0.6.2' }}
+      ENVOY_BUILD_STACK: ${{ github.workspace }}/tests/fixtures/stacks/build/build.estack
+      ENVOY_STACK: ${{ github.workspace }}/tests/fixtures/stacks/build/build.estack
 
     steps:
       - name: Checkout
@@ -42,14 +42,11 @@ jobs:
           .\scripts\install-envoy-release.ps1
           -ReleaseTag "$env:ENVOY_RELEASE"
 
-      - name: Validate build Stack
+      - name: Validate repository build Stack
         shell: pwsh
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:ENVOY_BUILD_STACK)) {
-            throw 'Set the ENVOY_BUILD_STACK repository Actions variable.'
-          }
           if (-not (Test-Path -LiteralPath $env:ENVOY_BUILD_STACK -PathType Leaf)) {
-            throw "Envoy build Stack is unavailable: '$env:ENVOY_BUILD_STACK'."
+            throw "Repository build Stack is unavailable: '$env:ENVOY_BUILD_STACK'."
           }
 
       - name: Install executable build tools

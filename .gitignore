@@ -12,6 +12,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+!tests/fixtures/stacks/build/
+!tests/fixtures/stacks/build/build.estack
 develop-eggs/
 dist/
 downloads/

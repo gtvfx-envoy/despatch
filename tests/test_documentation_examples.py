@@ -80,3 +80,28 @@ def testProductionStackExampleLoads(monkeypatch, tmp_path):
     assert stack.pinned_version == "2026.07"
     assert stack.metadata["tier"] == "production"
     assert len(stack.bundles) == 3
+
+
+def testRepositoryBuildStackLoads(monkeypatch, tmp_path):
+    fixture_path = Path(__file__).parent / "fixtures" / "stacks" / "build" / "build.estack"
+    contents = fixture_path.read_text(encoding="utf-8")
+    bundle_prefix = "${ENVOY_STUDIO_BNDLS}/"
+    bundle_paths = [
+        line.strip().removeprefix("- path: ")
+        for line in contents.splitlines()
+        if line.strip().startswith("- path: ")
+    ]
+
+    assert bundle_paths
+    assert all(bundle_path.startswith(bundle_prefix) for bundle_path in bundle_paths)
+
+    studio_bundle_root = tmp_path / "studio-bundles"
+    for bundle_path in bundle_paths:
+        makeBundle(studio_bundle_root / bundle_path.removeprefix(bundle_prefix))
+    monkeypatch.setenv("ENVOY_STUDIO_BNDLS", str(studio_bundle_root))
+
+    stack = envoy.Stack(fixture_path)
+
+    assert stack.name == "build"
+    assert stack.namespace == "gt:despatch:ci"
+    assert len(stack.bundles) == len(bundle_paths)

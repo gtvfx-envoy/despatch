@@ -1,0 +1,13 @@
+# Despatch's source and executable validation Stack.
+# Keep these bundle pins aligned with the Envoy release supported by Despatch.
+namespace: gt:despatch:ci
+source:
+  type: local
+metadata:
+  owner: despatch
+  purpose: continuous-integration
+bundles:
+  - path: ${ENVOY_STUDIO_BNDLS}/globals/0.3.0
+  - path: ${ENVOY_STUDIO_BNDLS}/ext/python/3.11.9-envoy.2
+  - path: ${ENVOY_STUDIO_BNDLS}/ext/pyside/6.11.1-envoy.1
+  - path: ${ENVOY_STUDIO_BNDLS}/ext/qtshim/2.0.5-envoy.1

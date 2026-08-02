@@ -91,11 +91,14 @@ pins the Envoy release embedded into the executable and exposes an override for
 manual compatibility builds.
 
 Windows CI jobs bootstrap that pinned Envoy release under the runner's temporary
-directory. The `ENVOY_BUILD_STACK` repository Actions variable selects the
-shared Stack used for Python commands. That Stack supplies Python 3.11, PySide6,
+directory. The repository-owned
+`tests/fixtures/stacks/build/build.estack` Stack supplies Python 3.11, PySide6,
 and Qt.py from Envoy Bundles, while the bootstrap exposes the pinned Envoy Python
-API through `ENVOY_SITE_PACKAGES`. The Windows bundle and Python wheel are both
-verified against Envoy's `SHA256SUMS` before installation.
+API through `ENVOY_SITE_PACKAGES`. Update the fixture's Bundle pins alongside
+compatible Envoy runtime changes. Runners resolve its portable paths through
+`ENVOY_STUDIO_BNDLS`; no repository Actions variable selects the Stack. The
+Windows bundle and Python wheel are both verified against Envoy's `SHA256SUMS`
+before installation.
 
 ## Application manifests
 
