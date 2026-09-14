@@ -69,8 +69,11 @@ jobs:
           export PATH="${RUNNER_TEMP}/lychee/bin:${PATH}"
 
           mkdir -p lychee
+          if [ ! -e despatch ]; then
+            ln -s . despatch
+          fi
           set +e
-          lychee --mode task --format markdown --output lychee/out.md \
+          lychee --mode task --root-dir . --format markdown --output lychee/out.md \
             --no-progress --max-retries 3 --timeout 20 \
             './**/*.html' '../README.md'
           lychee_exit_code=$?
