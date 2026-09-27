@@ -252,36 +252,6 @@ def testClearApplicationHistoryIgnoresUnknownApplication():
     assert calls == []
 
 
-def testSetHideUnusedApplicationsPersistsChange():
-    calls = []
-    coordinator = SimpleNamespace(
-        _settings=SimpleNamespace(
-            hide_unused_applications=False,
-            setHideUnusedApplications=calls.append,
-        ),
-        _refreshViews=lambda: calls.append("refreshed"),
-    )
-
-    _application.DespatchApplication._setHideUnusedApplications(coordinator, True)
-
-    assert calls == [True, "refreshed"]
-
-
-def testSetHideUnusedApplicationsIsANoOpWhenUnchanged():
-    calls = []
-    coordinator = SimpleNamespace(
-        _settings=SimpleNamespace(
-            hide_unused_applications=True,
-            setHideUnusedApplications=lambda value: calls.append(value),
-        ),
-        _refreshViews=lambda: calls.append("refreshed"),
-    )
-
-    _application.DespatchApplication._setHideUnusedApplications(coordinator, True)
-
-    assert calls == []
-
-
 def testOpenApplicationHomepageIgnoresApplicationWithoutOne():
     submitted = []
     coordinator = SimpleNamespace(

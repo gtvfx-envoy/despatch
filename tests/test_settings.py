@@ -67,6 +67,7 @@ def testSettingsRoundTrip(tmp_path):
         global_shortcut_enabled=True,
         global_shortcut="Ctrl+Alt+K",
         stack_refresh_interval_seconds=600,
+        hide_unused_applications=True,
     )
 
     reloaded = _settings.SettingsStore(settings_path)
@@ -76,6 +77,7 @@ def testSettingsRoundTrip(tmp_path):
     assert reloaded.keep_open_after_launch is True
     assert reloaded.global_shortcut == "Ctrl+Alt+K"
     assert reloaded.stack_refresh_interval_seconds == 600
+    assert reloaded.hide_unused_applications is True
 
 
 def testClearLaunchHistoryRemovesOnlyOneEntry(tmp_path):
@@ -106,7 +108,14 @@ def testHideUnusedApplicationsRoundTrip(tmp_path):
     store = _settings.SettingsStore(settings_path)
 
     assert store.hide_unused_applications is False
-    store.setHideUnusedApplications(True)
+    store.updatePreferences(
+        theme="system",
+        keep_open_after_launch=False,
+        autostart=False,
+        global_shortcut_enabled=False,
+        global_shortcut="Ctrl+Alt+Space",
+        hide_unused_applications=True,
+    )
     assert store.hide_unused_applications is True
 
     reloaded = _settings.SettingsStore(settings_path)
@@ -164,4 +173,15 @@ def testSettingsDialogReturnsStackRefreshInterval(qapp, tmp_path):
     dialog._stack_refresh_spin.setValue(15)
 
     assert dialog.values()["stack_refresh_interval_seconds"] == 900
+    dialog.close()
+
+
+def testSettingsDialogReturnsHideUnusedApplications(qapp, tmp_path):
+    store = _settings.SettingsStore(tmp_path / "settings.json")
+    dialog = _settings_dialog.SettingsDialog(store, True, True)
+
+    assert dialog.values()["hide_unused_applications"] is False
+    dialog._hide_unused_check.setChecked(True)
+
+    assert dialog.values()["hide_unused_applications"] is True
     dialog.close()

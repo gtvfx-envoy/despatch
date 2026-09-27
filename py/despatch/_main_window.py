@@ -93,7 +93,6 @@ class MainWindow(QtWidgets.QMainWindow):
     copyRequested = QtCore.Signal(str)
     homepageRequested = QtCore.Signal(str)
     historyClearRequested = QtCore.Signal(str)
-    hideUnusedToggled = QtCore.Signal(bool)
     stackRequested = QtCore.Signal(object)
     customStackRequested = QtCore.Signal()
     documentationRequested = QtCore.Signal()
@@ -165,12 +164,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._stack_combo.setToolTip("Active Envoy Stack")
         toolbar.addWidget(self._stack_combo, 1)
 
-        self._hide_unused_button = QtWidgets.QToolButton()
-        self._hide_unused_button.setText("Hide unused")
-        self._hide_unused_button.setToolTip("Hide applications with no favorite or launch history")
-        self._hide_unused_button.setCheckable(True)
-        toolbar.addWidget(self._hide_unused_button)
-
         self._documentation_button = QtWidgets.QToolButton()
         self._documentation_button.setText("?")
         self._documentation_button.setToolTip("Documentation")
@@ -217,7 +210,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._title_bar.minimizeRequested.connect(self.showMinimized)
         self._documentation_button.clicked.connect(self.documentationRequested)
         self._settings_button.clicked.connect(self.settingsRequested)
-        self._hide_unused_button.toggled.connect(self.hideUnusedToggled)
         self._stack_combo.currentIndexChanged.connect(self._onStackChanged)
         self._search_input.textChanged.connect(self._populateApplications)
         self._search_input.returnPressed.connect(self._launchFirstVisible)
@@ -300,9 +292,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._favorites = favorites
         self._recent_applications = recent_applications
         self._hide_unused = hide_unused
-        self._hide_unused_button.blockSignals(True)
-        self._hide_unused_button.setChecked(hide_unused)
-        self._hide_unused_button.blockSignals(False)
         self._populateApplications()
 
     def setLoading(self, message: str) -> None:

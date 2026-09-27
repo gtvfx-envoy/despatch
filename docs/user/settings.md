@@ -15,6 +15,12 @@ Enable **Keep launcher open after starting an app** when launching several
 tools in succession. Otherwise the launcher hides after Envoy reports a
 successful process start.
 
+## Hide unused applications
+
+Enable **Hide applications with no favorite or launch history** to shorten
+the list to only applications you have favorited or recently launched.
+Disable it to see the full catalog for the active Stack.
+
 ## Stack refresh
 
 Choose how often Despatch checks an explicitly selected named or custom Stack

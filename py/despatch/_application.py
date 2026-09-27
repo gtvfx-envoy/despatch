@@ -164,7 +164,6 @@ class DespatchApplication(QtCore.QObject):
         self._window.copyRequested.connect(self._copyCommand)
         self._window.homepageRequested.connect(self._openApplicationHomepage)
         self._window.historyClearRequested.connect(self._clearApplicationHistory)
-        self._window.hideUnusedToggled.connect(self._setHideUnusedApplications)
         self._window.stackRequested.connect(self._switchStack)
         self._window.customStackRequested.connect(self._chooseCustomStack)
         self._window.documentationRequested.connect(self._openDocumentation)
@@ -423,13 +422,6 @@ class DespatchApplication(QtCore.QObject):
         if stable_id not in self._applications:
             return
         self._settings.clearLaunchHistory(stable_id)
-        self._refreshViews()
-
-    def _setHideUnusedApplications(self, hidden: bool) -> None:
-        """Persist the hide-unused-applications filter and refresh the catalog."""
-        if hidden == self._settings.hide_unused_applications:
-            return
-        self._settings.setHideUnusedApplications(hidden)
         self._refreshViews()
 
     def _copyCommand(self, stable_id: str) -> None:

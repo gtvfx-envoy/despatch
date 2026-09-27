@@ -200,16 +200,6 @@ class SettingsStore:
         self._data["recentApplications"] = recent
         self.save()
 
-    def setHideUnusedApplications(self, hidden: bool) -> None:
-        """Persist whether unused applications are hidden.
-
-        Args:
-            hidden: Whether to hide applications with no favorite or history.
-
-        """
-        self._data["hideUnusedApplications"] = bool(hidden)
-        self.save()
-
     def updatePreferences(
         self,
         *,
@@ -219,6 +209,7 @@ class SettingsStore:
         global_shortcut_enabled: bool,
         global_shortcut: str,
         stack_refresh_interval_seconds: int | None = None,
+        hide_unused_applications: bool | None = None,
     ) -> None:
         """Validate and persist settings edited by the user.
 
@@ -230,6 +221,9 @@ class SettingsStore:
             global_shortcut: Portable shortcut text.
             stack_refresh_interval_seconds: Whole-minute Stack polling interval.
                 Defaults to the current value when omitted.
+            hide_unused_applications: Whether to hide applications with no
+                favorite or launch history. Defaults to the current value
+                when omitted.
 
         Raises:
             ValueError: If a supplied setting is invalid.
@@ -241,6 +235,8 @@ class SettingsStore:
             raise ValueError("A global shortcut is required when the shortcut is enabled")
         if stack_refresh_interval_seconds is None:
             stack_refresh_interval_seconds = self.stack_refresh_interval_seconds
+        if hide_unused_applications is None:
+            hide_unused_applications = self.hide_unused_applications
         if (
             isinstance(stack_refresh_interval_seconds, bool)
             or not isinstance(stack_refresh_interval_seconds, int)
@@ -257,6 +253,7 @@ class SettingsStore:
                 "globalShortcutEnabled": bool(global_shortcut_enabled),
                 "globalShortcut": global_shortcut.strip(),
                 "stackRefreshIntervalSeconds": stack_refresh_interval_seconds,
+                "hideUnusedApplications": bool(hide_unused_applications),
             }
         )
         self.save()

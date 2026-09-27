@@ -54,6 +54,12 @@ class SettingsDialog(QtWidgets.QDialog):
         self._keep_open_check.setChecked(settings.keep_open_after_launch)
         form_layout.addRow("", self._keep_open_check)
 
+        self._hide_unused_check = QtWidgets.QCheckBox(
+            "Hide applications with no favorite or launch history"
+        )
+        self._hide_unused_check.setChecked(settings.hide_unused_applications)
+        form_layout.addRow("", self._hide_unused_check)
+
         self._stack_refresh_spin = QtWidgets.QSpinBox()
         self._stack_refresh_spin.setRange(1, 60)
         self._stack_refresh_spin.setSuffix(" minutes")
@@ -114,4 +120,5 @@ class SettingsDialog(QtWidgets.QDialog):
             "global_shortcut_enabled": self._shortcut_check.isChecked(),
             "global_shortcut": self._shortcut_input.keySequence().toString(),
             "stack_refresh_interval_seconds": self._stack_refresh_spin.value() * 60,
+            "hide_unused_applications": self._hide_unused_check.isChecked(),
         }

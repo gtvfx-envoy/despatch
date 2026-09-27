@@ -318,7 +318,9 @@ def testUngroupedApplicationsDoNotShowEmptyStateMessage(qapp):
     window.close()
 
 
-def testHideUnusedButtonPersistsAndAppliesFilter(qapp):
+def testSetCatalogAppliesHideUnusedFilter(qapp):
+    # The hide-unused filter is now a settings-dialog preference; the
+    # coordinator persists it and passes it back through setCatalog().
     window = _main_window.MainWindow()
     favored = makeApplication("gt:test:favored")
     unused = makeApplication("gt:test:unused")
@@ -327,23 +329,15 @@ def testHideUnusedButtonPersistsAndAppliesFilter(qapp):
         _models.StackSelection("studio", "studio", Path("studio.estack")),
     )
     snapshot = _models.CatalogSnapshot(stack_state, (favored, unused), (), ())
-    window.setCatalog(snapshot, frozenset({"gt:test:favored"}), ())
-    received = []
-    window.hideUnusedToggled.connect(received.append)
 
-    window._hide_unused_button.click()
-    qapp.processEvents()
-
-    assert received == [True]
-    # MainWindow only requests the change; the coordinator persists it and
-    # calls setCatalog() back with the filter applied.
     window.setCatalog(snapshot, frozenset({"gt:test:favored"}), (), True)
+
     shown_ids = {
         window._application_list.item(index).data(_main_window._APPLICATION_ROLE)
         for index in range(window._application_list.count())
     }
     shown_ids.discard(None)
     assert shown_ids == {"gt:test:favored"}
-    assert window._hide_unused_button.isChecked() is True
+    assert window._hide_unused is True
     window.allowClose()
     window.close()
