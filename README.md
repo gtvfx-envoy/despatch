@@ -67,6 +67,16 @@ envoy python -m build
 Do not substitute a system `python` or `pip`; it will not contain the assembled
 runtime used by Despatch.
 
+Testing an unreleased Envoy Python API change against Despatch before it's
+published? From an `envoy_utils` checkout, run
+`engit dev link python <path-to-envoy-checkout>` to build and install a local
+Envoy dev bundle, then add its parent directory to `ENVOY_BNDL_ROOTS` (or
+reference it directly) so Despatch's own `envoy` resolution picks it up
+instead of the pinned release. `engit dev unlink python` removes it. See
+`engit`'s
+[CLI reference](https://gtvfx-envoy.github.io/envoy_utils/cli-reference/engit/#engit-dev)
+for details.
+
 ## Standalone executable
 
 Build the Windows executable locally from an Envoy environment containing
