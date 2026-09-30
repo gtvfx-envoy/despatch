@@ -68,14 +68,19 @@ Do not substitute a system `python` or `pip`; it will not contain the assembled
 runtime used by Despatch.
 
 Testing an unreleased Envoy Python API change against Despatch before it's
-published? From an `envoy_utils` checkout, run
-`engit dev link python <path-to-envoy-checkout>` to build and install a local
-Envoy dev bundle, then add its parent directory to `ENVOY_BNDL_ROOTS` (or
-reference it directly) so Despatch's own `envoy` resolution picks it up
-instead of the pinned release. `engit dev unlink python` removes it. See
+published? `engit dev link python <path-to-envoy-checkout>` (from an
+`envoy_utils` checkout) builds and installs a local Envoy dev bundle. If you
+have an Envoy Stack active, add the printed bundle path directly to it --
+Envoy resolves bundles from the active Stack and does not consult
+`ENVOY_BNDL_ROOTS` while one is set. Only add the bundle's parent directory
+to `ENVOY_BNDL_ROOTS` if you are relying on Envoy's no-Stack auto-discovery
+instead. `engit dev unlink python` removes the generated bundle. This
+command is not yet available from Envoy Utils `main` or its latest release;
+it exists only in the still-open
+[envoy_utils#13](https://github.com/gtvfx-envoy/envoy_utils/pull/13). See
 `engit`'s
 [CLI reference](https://gtvfx-envoy.github.io/envoy_utils/cli-reference/engit/#engit-dev)
-for details.
+for details once that lands.
 
 ## Standalone executable
 

@@ -13,12 +13,6 @@ on:
 permissions:
   contents: read
   issues: write
-  # Needed only for the notify job's opt-in auto-cascade dispatch below
-  # (RELEASE_AUTOMATION_AUTO_PREPARE); dispatching this repository's own
-  # prepare-release.yml via `workflow_dispatch` is exempt from the usual
-  # GITHUB_TOKEN recursive-trigger restriction, so no cross-repo App token
-  # is needed for this same-repo dispatch.
-  actions: write
 
 env:
   ENVOY_TAG: ${{ github.event.client_payload.envoy_tag || format('v{0}', inputs.envoy_version) }}
@@ -219,6 +213,16 @@ jobs:
     needs: [classify, validate]
     if: always() && needs.classify.result == 'success'
     runs-on: ubuntu-24.04
+    # `classify` and `validate` check out and execute the candidate Envoy
+    # runtime, so they stay on the read-only workflow defaults above.
+    # `actions: write` is needed only here, for this job's opt-in
+    # auto-cascade dispatch below (RELEASE_AUTOMATION_AUTO_PREPARE).
+    # Job-level `permissions` fully replaces the workflow defaults (it does
+    # not merge with them), so every scope this job needs must be repeated.
+    permissions:
+      contents: read
+      issues: write
+      actions: write
 
     steps:
       - name: Checkout Despatch
@@ -289,10 +293,17 @@ jobs:
               --label dependency:envoy --label "release-impact:$CLASSIFICATION"
           fi
 
-      # Despatch has no Rust toolchain in CI, so download the latest
-      # released engit (built and published by Envoy Utils) rather than
-      # building it from source. Verified the same way bundle-publish.yml
-      # verifies engit downloads: SHA256SUMS from the same release.
+      # Despatch has no Rust toolchain in CI, so download a pinned engit
+      # release (built and published by Envoy Utils) rather than building
+      # it from source. Verified the same way bundle-publish.yml verifies
+      # engit downloads: SHA256SUMS from the same release. Deliberately not
+      # "latest": `engit release-train` (required below) is a new command
+      # that the current latest Envoy Utils release predates, so silently
+      # grabbing "latest" would fail here with a cryptic "unknown
+      # subcommand" error instead of this actionable one. Set the
+      # ENGIT_RELEASE_TRAIN_VERSION repository variable to an Envoy Utils
+      # release version (e.g. "0.3.0", no "v" prefix) known to provide
+      # `engit release-train` before enabling RELEASE_AUTOMATION_AUTO_PREPARE.
       - name: Download Engit
         if: >-
           needs.classify.outputs.relevant == 'true' &&
@@ -300,8 +311,13 @@ jobs:
           vars.RELEASE_AUTOMATION_AUTO_PREPARE == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          ENGIT_RELEASE_TRAIN_VERSION: ${{ vars.ENGIT_RELEASE_TRAIN_VERSION }}
         run: |
-          engit_tag="$(gh release view --repo gtvfx-envoy/envoy_utils --json tagName --jq .tagName)"
+          if [[ -z "$ENGIT_RELEASE_TRAIN_VERSION" ]]; then
+            echo "::error::RELEASE_AUTOMATION_AUTO_PREPARE is enabled but the ENGIT_RELEASE_TRAIN_VERSION repository variable is unset. Set it to an Envoy Utils release version that provides 'engit release-train' (e.g. 0.3.0) before enabling auto-cascade." >&2
+            exit 1
+          fi
+          engit_tag="v$ENGIT_RELEASE_TRAIN_VERSION"
           asset="envoy_utils-$engit_tag-linux-x86_64-musl.tar.gz"
           release_directory="$RUNNER_TEMP/engit-$engit_tag"
           mkdir -p "$release_directory"
