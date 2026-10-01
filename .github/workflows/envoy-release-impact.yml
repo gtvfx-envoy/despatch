@@ -213,6 +213,16 @@ jobs:
     needs: [classify, validate]
     if: always() && needs.classify.result == 'success'
     runs-on: ubuntu-24.04
+    # `classify` and `validate` check out and execute the candidate Envoy
+    # runtime, so they stay on the read-only workflow defaults above.
+    # `actions: write` is needed only here, for this job's opt-in
+    # auto-cascade dispatch below (RELEASE_AUTOMATION_AUTO_PREPARE).
+    # Job-level `permissions` fully replaces the workflow defaults (it does
+    # not merge with them), so every scope this job needs must be repeated.
+    permissions:
+      contents: read
+      issues: write
+      actions: write
 
     steps:
       - name: Checkout Despatch
@@ -281,4 +291,76 @@ jobs:
           else
             gh issue create --title "$title" --body-file issue.md \
               --label dependency:envoy --label "release-impact:$CLASSIFICATION"
+          fi
+
+      # Despatch has no Rust toolchain in CI, so download a pinned engit
+      # release (built and published by Envoy Utils) rather than building
+      # it from source. Verified the same way bundle-publish.yml verifies
+      # engit downloads: SHA256SUMS from the same release. Deliberately not
+      # "latest": `engit release-train` (required below) is a new command
+      # that the current latest Envoy Utils release predates, so silently
+      # grabbing "latest" would fail here with a cryptic "unknown
+      # subcommand" error instead of this actionable one. Set the
+      # ENGIT_RELEASE_TRAIN_VERSION repository variable to an Envoy Utils
+      # release version (e.g. "0.3.0", no "v" prefix) known to provide
+      # `engit release-train` before enabling RELEASE_AUTOMATION_AUTO_PREPARE.
+      - name: Download Engit
+        if: >-
+          needs.classify.outputs.relevant == 'true' &&
+          steps.report.outputs.classification == 'review' &&
+          vars.RELEASE_AUTOMATION_AUTO_PREPARE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENGIT_RELEASE_TRAIN_VERSION: ${{ vars.ENGIT_RELEASE_TRAIN_VERSION }}
+        run: |
+          if [[ -z "$ENGIT_RELEASE_TRAIN_VERSION" ]]; then
+            echo "::error::RELEASE_AUTOMATION_AUTO_PREPARE is enabled but the ENGIT_RELEASE_TRAIN_VERSION repository variable is unset. Set it to an Envoy Utils release version that provides 'engit release-train' (e.g. 0.3.0) before enabling auto-cascade." >&2
+            exit 1
+          fi
+          engit_tag="v$ENGIT_RELEASE_TRAIN_VERSION"
+          asset="envoy_utils-$engit_tag-linux-x86_64-musl.tar.gz"
+          release_directory="$RUNNER_TEMP/engit-$engit_tag"
+          mkdir -p "$release_directory"
+          gh release download "$engit_tag" \
+            --repo gtvfx-envoy/envoy_utils \
+            --pattern "$asset" --pattern SHA256SUMS \
+            --dir "$release_directory" --clobber
+          expected="$(awk -v asset="$asset" '$2 == asset {print $1}' "$release_directory/SHA256SUMS")"
+          [[ -n "$expected" ]] || { echo "No checksum found for $asset" >&2; exit 1; }
+          actual="$(sha256sum "$release_directory/$asset" | awk '{print $1}')"
+          [[ "$actual" == "$expected" ]] || { echo "Checksum mismatch for $asset" >&2; exit 1; }
+          mkdir -p "$release_directory/bundle"
+          tar -xzf "$release_directory/$asset" -C "$release_directory/bundle"
+          engit="$(find "$release_directory/bundle" -type f -name engit -print -quit)"
+          [[ -n "$engit" ]] || { echo "engit was not found in the release archive" >&2; exit 1; }
+          echo "$(dirname "$engit")" >> "$GITHUB_PATH"
+
+      # A `review` classification means Despatch's source, lint, and frozen
+      # executable already validated cleanly against this Envoy candidate --
+      # the mechanical case automation can safely act on. `required`
+      # (validation failure) always still needs a human fix first and is
+      # deliberately excluded here. This only ever dispatches the existing,
+      # unmodified prepare-release.yml, which still runs its own full
+      # validation and opens a draft pull request; nothing is auto-merged.
+      - name: Dispatch downstream Prepare Release
+        if: >-
+          needs.classify.outputs.relevant == 'true' &&
+          steps.report.outputs.classification == 'review' &&
+          vars.RELEASE_AUTOMATION_AUTO_PREPARE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MARKER: ${{ steps.report.outputs.marker }}
+        run: |
+          envoy_version="${ENVOY_TAG#v}"
+          engit release-train prepare-downstream \
+            --owner "${{ github.repository_owner }}" \
+            --repo despatch \
+            --envoy-version "$envoy_version"
+          issue_number="$(
+            gh issue list --state all --limit 100 --json number,body \
+              --jq ".[] | select(.body | contains(\"$MARKER\")) | .number" | head -n 1
+          )"
+          if [[ -n "$issue_number" ]]; then
+            gh issue comment "$issue_number" --body \
+              "🤖 Automatically dispatched **Prepare Release** for Despatch with Envoy \`v$envoy_version\`. See the [Actions tab](${{ github.server_url }}/${{ github.repository }}/actions/workflows/prepare-release.yml) for progress."
           fi
