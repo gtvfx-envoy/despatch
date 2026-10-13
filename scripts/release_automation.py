@@ -14,6 +14,9 @@ SEMVER_PATTERN = re.compile(
     r"(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?"
     r"(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"
 )
+ENVOY_PIN_PATTERN = re.compile(
+    r'(?ms)(^\[tool\.despatch\](?:(?!^\s*\[).)*?^envoy-version\s*=\s*")([^"]+)(")$'
+)
 DIRECT_ENVOY_APIS = (
     "Stack",
     "discoverBundlesAuto",
@@ -64,40 +67,26 @@ def replaceExactly(
 
 
 def parseReleaseState(repository_root: Path) -> dict:
-    """Read the synchronized Despatch version and Envoy workflow pin."""
+    """Read the synchronized Despatch version and Envoy pin."""
     pyproject_contents = (repository_root / "pyproject.toml").read_text(encoding="utf-8")
     init_contents = (repository_root / "py" / "despatch" / "__init__.py").read_text(
         encoding="utf-8"
     )
-    workflow_path = repository_root / ".github" / "workflows" / "build-release.yml"
-    workflow_contents = workflow_path.read_text(encoding="utf-8")
     project_match = re.search(
         r'(?ms)^\[project\]\s*.*?^version\s*=\s*"([^"]+)"$',
         pyproject_contents,
     )
     init_match = re.search(r'(?m)^__version__\s*=\s*"([^"]+)"$', init_contents)
-    workflow_default_match = re.search(r"(?m)^\s+default:\s+([^\s]+)$", workflow_contents)
-    workflow_fallback_match = re.search(r"inputs\.envoy_version \|\| '([^']+)'", workflow_contents)
-    if (
-        project_match is None
-        or init_match is None
-        or workflow_default_match is None
-        or workflow_fallback_match is None
-    ):
-        raise RuntimeError("Despatch release versions or Envoy workflow defaults are malformed.")
+    envoy_match = ENVOY_PIN_PATTERN.search(pyproject_contents)
+    if project_match is None or init_match is None or envoy_match is None:
+        raise RuntimeError("Despatch release versions or the Envoy pin are malformed.")
     project_version = project_match.group(1)
     init_version = init_match.group(1)
     if project_version != init_version:
         raise RuntimeError(
             f"pyproject.toml version {project_version} disagrees with __init__ {init_version}."
         )
-    workflow_versions = [
-        validateVersion(workflow_default_match.group(1)),
-        validateVersion(workflow_fallback_match.group(1)),
-    ]
-    if len(set(workflow_versions)) != 1:
-        raise RuntimeError(f"Envoy workflow defaults disagree: {workflow_versions}")
-    return {"version": project_version, "envoy_tag": versionToTag(workflow_versions[0])}
+    return {"version": project_version, "envoy_tag": versionToTag(envoy_match.group(2))}
 
 
 def checkRelease(
@@ -119,11 +108,12 @@ def checkRelease(
 
 
 def prepareRelease(repository_root: Path, version: str, envoy_version: str) -> None:
-    """Synchronize the Despatch version and both embedded Envoy defaults."""
+    """Synchronize the Despatch version and Envoy pin; never edits workflow files."""
     validated_version = validateVersion(version)
     validated_envoy_version = validateVersion(envoy_version)
+    pyproject_path = repository_root / "pyproject.toml"
     replaceExactly(
-        repository_root / "pyproject.toml",
+        pyproject_path,
         re.compile(r'(?ms)(^\[project\]\s*.*?)^version\s*=\s*"[^"]+"$'),
         rf'\g<1>version = "{validated_version}"',
         1,
@@ -136,20 +126,12 @@ def prepareRelease(repository_root: Path, version: str, envoy_version: str) -> N
         1,
         "package version",
     )
-    workflow_path = repository_root / ".github" / "workflows" / "build-release.yml"
     replaceExactly(
-        workflow_path,
-        re.compile(r"(?m)(^\s+default:\s+)[^\s]+$"),
-        rf"\g<1>{validated_envoy_version}",
+        pyproject_path,
+        ENVOY_PIN_PATTERN,
+        rf"\g<1>{validated_envoy_version}\g<3>",
         1,
-        "Envoy release input default",
-    )
-    replaceExactly(
-        workflow_path,
-        re.compile(r"(inputs\.envoy_version \|\| ')[^']+(')"),
-        rf"\g<1>{validated_envoy_version}\g<2>",
-        1,
-        "Envoy release fallback",
+        "Envoy release pin",
     )
     checkRelease(repository_root, validated_version, validated_envoy_version)
 
