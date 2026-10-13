@@ -14,7 +14,9 @@ SEMVER_PATTERN = re.compile(
     r"(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?"
     r"(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"
 )
-ENVOY_PIN_PATTERN = re.compile(r'(?ms)(^\[tool\.despatch\]\s*.*?^envoy-version\s*=\s*")([^"]+)(")$')
+ENVOY_PIN_PATTERN = re.compile(
+    r'(?ms)(^\[tool\.despatch\](?:(?!^\s*\[).)*?^envoy-version\s*=\s*")([^"]+)(")$'
+)
 DIRECT_ENVOY_APIS = (
     "Stack",
     "discoverBundlesAuto",
