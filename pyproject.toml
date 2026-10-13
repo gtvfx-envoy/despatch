@@ -52,6 +52,12 @@ despatch = "py/despatch"
 [tool.setuptools.package-data]
 "despatch.resources" = ["icons/*"]
 
+[tool.despatch]
+# Envoy release the executable embeds. Prepare Release rewrites this value and
+# CI reads it through scripts/release_automation.py, so no workflow file has to
+# carry (or be edited to change) the pin.
+envoy-version = "0.6.2"
+
 [tool.pytest.ini_options]
 addopts = "-ra"
 pythonpath = ["py"]

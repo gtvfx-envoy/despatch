@@ -7,9 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       envoy_version:
-        description: Unprefixed Envoy semantic version to embed in the executable
-        required: true
-        default: 0.6.2
+        description: >-
+          Unprefixed Envoy semantic version to embed instead of the version pinned
+          in pyproject.toml (leave blank to build the pinned version)
+        required: false
         type: string
 
 permissions:
@@ -21,7 +22,6 @@ jobs:
     name: Build Windows executable
     runs-on: [self-hosted, X64, Windows, windows-11, ci]
     env:
-      ENVOY_RELEASE: v${{ inputs.envoy_version || '0.6.2' }}
       ENVOY_BUILD_STACK: ${{ github.workspace }}/tests/fixtures/stacks/build/build.estack
       ENVOY_STACK: ${{ github.workspace }}/tests/fixtures/stacks/build/build.estack
       # The build Stack pins its bundles as ${ENVOY_STUDIO_BNDLS}/..., so the
@@ -40,6 +40,11 @@ jobs:
         with:
           python-version: '3.11.9'
 
+      - name: Read pinned Envoy release
+        id: release-state
+        shell: pwsh
+        run: python scripts/release_automation.py check --github-output $env:GITHUB_OUTPUT
+
       - name: Compute artifact reference
         shell: pwsh
         run: |
@@ -54,6 +59,7 @@ jobs:
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          ENVOY_RELEASE: ${{ inputs.envoy_version && format('v{0}', inputs.envoy_version) || steps.release-state.outputs.envoy_tag }}
         run: >-
           .\scripts\install-envoy-release.ps1
           -ReleaseTag "$env:ENVOY_RELEASE"
@@ -151,12 +157,6 @@ jobs:
           files: dist/despatch.exe
           fail_on_unmatched_files: true
 
-      - name: Read release state
-        if: startsWith(github.ref, 'refs/tags/')
-        id: release-state
-        shell: pwsh
-        run: python scripts/release_automation.py check --github-output $env:GITHUB_OUTPUT
-
       - name: Close matching Envoy impact issue
         if: startsWith(github.ref, 'refs/tags/')
         uses: actions/github-script@v8
@@ -203,8 +203,6 @@ jobs:
             os_name: macOS
             artifact_suffix: macos
     runs-on: ${{ matrix.runner }}
-    env:
-      ENVOY_RELEASE: v${{ inputs.envoy_version || '0.6.2' }}
     # No Linux/macOS build of the ext:python / ext:pyside Envoy bundles this
     # repository's build Stack pins exists yet -- see lint.yml for the same
     # note. PySide6/Qt.py are installed directly via pip here (matching
@@ -220,6 +218,11 @@ jobs:
         with:
           python-version: '3.11.9'
 
+      - name: Read pinned Envoy release
+        id: release-state
+        shell: pwsh
+        run: python scripts/release_automation.py check --github-output $env:GITHUB_OUTPUT
+
       - name: Compute artifact reference
         shell: pwsh
         run: |
@@ -232,6 +235,7 @@ jobs:
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          ENVOY_RELEASE: ${{ inputs.envoy_version && format('v{0}', inputs.envoy_version) || steps.release-state.outputs.envoy_tag }}
         run: >-
           ./scripts/install-envoy-release.ps1
           -ReleaseTag "$env:ENVOY_RELEASE"
