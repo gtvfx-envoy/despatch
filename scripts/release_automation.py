@@ -63,6 +63,19 @@ def replaceExactly(
     path.write_text(updated, encoding="utf-8")
 
 
+def replaceEvery(
+    path: Path,
+    pattern: re.Pattern,
+    replacement: str,
+    description: str,
+) -> None:
+    """Replace every match of a pattern that repeats by design, requiring at least one."""
+    match_count = len(pattern.findall(path.read_text(encoding="utf-8")))
+    if match_count == 0:
+        raise RuntimeError(f"Expected at least 1 {description} value in {path}; found 0.")
+    replaceExactly(path, pattern, replacement, match_count, description)
+
+
 def parseReleaseState(repository_root: Path) -> dict:
     """Read the synchronized Despatch version and Envoy workflow pin."""
     pyproject_contents = (repository_root / "pyproject.toml").read_text(encoding="utf-8")
@@ -77,12 +90,12 @@ def parseReleaseState(repository_root: Path) -> dict:
     )
     init_match = re.search(r'(?m)^__version__\s*=\s*"([^"]+)"$', init_contents)
     workflow_default_match = re.search(r"(?m)^\s+default:\s+([^\s]+)$", workflow_contents)
-    workflow_fallback_match = re.search(r"inputs\.envoy_version \|\| '([^']+)'", workflow_contents)
+    workflow_fallbacks = re.findall(r"inputs\.envoy_version \|\| '([^']+)'", workflow_contents)
     if (
         project_match is None
         or init_match is None
         or workflow_default_match is None
-        or workflow_fallback_match is None
+        or not workflow_fallbacks
     ):
         raise RuntimeError("Despatch release versions or Envoy workflow defaults are malformed.")
     project_version = project_match.group(1)
@@ -93,10 +106,13 @@ def parseReleaseState(repository_root: Path) -> dict:
         )
     workflow_versions = [
         validateVersion(workflow_default_match.group(1)),
-        validateVersion(workflow_fallback_match.group(1)),
+        *(validateVersion(fallback) for fallback in workflow_fallbacks),
     ]
     if len(set(workflow_versions)) != 1:
-        raise RuntimeError(f"Envoy workflow defaults disagree: {workflow_versions}")
+        raise RuntimeError(
+            "Envoy workflow defaults disagree (input default, then each job fallback): "
+            f"{workflow_versions}"
+        )
     return {"version": project_version, "envoy_tag": versionToTag(workflow_versions[0])}
 
 
@@ -119,7 +135,7 @@ def checkRelease(
 
 
 def prepareRelease(repository_root: Path, version: str, envoy_version: str) -> None:
-    """Synchronize the Despatch version and both embedded Envoy defaults."""
+    """Synchronize the Despatch version and every embedded Envoy default."""
     validated_version = validateVersion(version)
     validated_envoy_version = validateVersion(envoy_version)
     replaceExactly(
@@ -144,11 +160,11 @@ def prepareRelease(repository_root: Path, version: str, envoy_version: str) -> N
         1,
         "Envoy release input default",
     )
-    replaceExactly(
+    # Each build job carries its own fallback, so every one must be rewritten.
+    replaceEvery(
         workflow_path,
         re.compile(r"(inputs\.envoy_version \|\| ')[^']+(')"),
         rf"\g<1>{validated_envoy_version}\g<2>",
-        1,
         "Envoy release fallback",
     )
     checkRelease(repository_root, validated_version, validated_envoy_version)

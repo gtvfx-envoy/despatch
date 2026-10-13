@@ -35,8 +35,8 @@ class ReleaseAutomationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release_automation.versionToTag("v0.6.1")
 
-    def testPrepareReleaseUpdatesAllPins(self):
-        """Preparation synchronizes both versions and both Envoy defaults."""
+    def makeRepository(self, default: str, *fallbacks: str) -> Path:
+        """Create a minimal repository whose workflow has one fallback per listed job."""
         temporary_directory = self.enterContext(tempfile.TemporaryDirectory())
         repository_root = Path(temporary_directory)
         (repository_root / "py" / "despatch").mkdir(parents=True)
@@ -48,13 +48,36 @@ class ReleaseAutomationTests(unittest.TestCase):
         (repository_root / "py" / "despatch" / "__init__.py").write_text(
             '__version__ = "0.1.0"\n', encoding="utf-8"
         )
-        (repository_root / ".github" / "workflows" / "build-release.yml").write_text(
-            "        default: 0.5.1\nenv: v${{ inputs.envoy_version || '0.5.1' }}\n",
-            encoding="utf-8",
+        workflow_lines = [f"        default: {default}"]
+        workflow_lines.extend(
+            f"env: v${{{{ inputs.envoy_version || '{fallback}' }}}}" for fallback in fallbacks
         )
+        (repository_root / ".github" / "workflows" / "build-release.yml").write_text(
+            "\n".join(workflow_lines) + "\n", encoding="utf-8"
+        )
+        return repository_root
+
+    def testPrepareReleaseUpdatesAllPins(self):
+        """Preparation synchronizes both versions and every Envoy default."""
+        # The real workflow carries one fallback per build job (Windows and Unix).
+        repository_root = self.makeRepository("0.5.1", "0.5.1", "0.5.1")
         release_automation.prepareRelease(repository_root, "0.2.0", "0.6.0")
         state = release_automation.checkRelease(repository_root, "0.2.0", "0.6.0")
         self.assertEqual(state, {"version": "0.2.0", "envoy_tag": "v0.6.0"})
+        workflow_path = repository_root / ".github" / "workflows" / "build-release.yml"
+        self.assertNotIn("0.5.1", workflow_path.read_text(encoding="utf-8"))
+
+    def testPrepareReleaseRequiresAnEnvoyFallback(self):
+        """Preparation fails closed when the workflow has no fallback to update."""
+        repository_root = self.makeRepository("0.5.1")
+        with self.assertRaisesRegex(RuntimeError, "Envoy release fallback"):
+            release_automation.prepareRelease(repository_root, "0.2.0", "0.6.0")
+
+    def testCheckReleaseRejectsDisagreeingFallbacks(self):
+        """A job fallback that drifts from the input default fails the check."""
+        repository_root = self.makeRepository("0.6.0", "0.6.0", "0.5.1")
+        with self.assertRaisesRegex(RuntimeError, "disagree"):
+            release_automation.checkRelease(repository_root)
 
 
 if __name__ == "__main__":
